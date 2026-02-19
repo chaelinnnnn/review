@@ -3,27 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Emotion X-ray Generator</title>
+  <title>Emotion Score Generator (Blokken-style)</title>
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
-    .wrap { display: grid; grid-template-columns: 360px 1fr; gap: 16px; align-items: start; }
-    textarea { width: 100%; height: 180px; padding: 10px; font-size: 14px; }
+    .wrap { display: grid; grid-template-columns: 380px 1fr; gap: 16px; align-items: start; }
+    textarea { width: 100%; height: 220px; padding: 10px; font-size: 14px; }
     button { padding: 10px 12px; font-size: 14px; cursor: pointer; }
-    .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-    .hint { font-size: 12px; color: #444; line-height: 1.5; margin-top: 10px; }
-    canvas { width: 100%; max-width: 1100px; border: 1px solid #ddd; background: #fff; }
-    .pill { display:inline-block; padding: 2px 8px; border-radius: 999px; background:#f3f3f3; font-size:12px; margin-right:6px;}
-    .legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+    .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .hint { font-size: 12px; color:#333; line-height: 1.6; margin-top:10px; }
+    canvas { width: 100%; max-width: 1200px; border: 1px solid #ddd; background:#fff; }
+    .legend { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
     .swatch { display:flex; align-items:center; gap:6px; font-size:12px; }
     .box { width:14px; height:14px; border:1px solid #0002; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#f3f3f3; font-size:12px; margin-right:6px;}
   </style>
 </head>
 <body>
-  <h1 style="margin:0 0 10px 0;">Emotion X-ray Generator</h1>
+  <h1 style="margin:0 0 10px 0;">Emotion X-ray → Graphic Score Generator</h1>
 
   <div class="wrap">
     <div>
-      <textarea id="input">i love apps but it crashes now</textarea>
+      <textarea id="input">I love this app but it crashes now. I paid for premium and still see ads. Never again, I'm done.</textarea>
 
       <div class="row">
         <button id="btnGen">Generate</button>
@@ -32,23 +32,31 @@
       </div>
 
       <div class="hint">
-        <div><span class="pill">Shape</span> Type 1(1인칭 시작) → Type 2(접속사 등장부터) → Type 3(시간 표현 등장부터) → Type 4(단절 선언부터 종료)</div>
-        <div style="margin-top:6px;"><span class="pill">Color</span> 7단계 팔레트(네가 준 HEX)를 감정 키워드 매칭으로 선택</div>
-        <div style="margin-top:6px;"><span class="pill">Tip</span> “but / however / though”, “now / still / again”, “delete / uninstall / done / never again” 같은 단어 넣어보면 타입 전환이 확 보임</div>
+        <div><span class="pill">Color</span> 감정 카테고리(너의 HEX) → 세그먼트 색</div>
+        <div><span class="pill">Pitch</span> 감정의 “각성도” → 세로 위치(높을수록 위)</div>
+        <div><span class="pill">Volume</span> 감정 강도 → 세그먼트 두께/면적</div>
+        <div><span class="pill">Form</span> 문장 신호에 따라 TYPE 전환(끊긴 블록)</div>
+        <div style="margin-top:8px;">
+          <b>TYPE 전환 규칙</b><br/>
+          • TYPE1: 기본 진행<br/>
+          • TYPE2: 접속사(but/however/though/although/yet) 등장 이후<br/>
+          • TYPE3: 시간표현(now/still/again/anymore/since/lately/recently/already) 등장 이후<br/>
+          • TYPE4: 단절(delete/uninstall/bye/done/never again) 등장 이후 → 큰 종결 블록 + 종료
+        </div>
       </div>
 
       <div class="legend" id="legend"></div>
     </div>
 
     <div>
-      <canvas id="c" width="1400" height="900"></canvas>
+      <canvas id="c" width="1600" height="980"></canvas>
     </div>
   </div>
 
 <script>
 (() => {
   // =========================
-  // 1) COLOR PALETTE (user-defined)
+  // 1) USER COLOR PALETTE (fixed)
   // =========================
   const COLORS = {
     basic_pos:   "#00FF90", // 기본 긍정
@@ -60,9 +68,9 @@
     extreme_neg: "#020605", // 극단 부정
   };
 
-  // legend
+  // Legend UI
   const legendEl = document.getElementById("legend");
-  const legendItems = [
+  [
     ["기본 긍정", COLORS.basic_pos],
     ["강화 긍정", COLORS.strong_pos],
     ["감정 애착", COLORS.attach_pos],
@@ -70,8 +78,7 @@
     ["약한 불만", COLORS.mild_neg],
     ["강한 불만", COLORS.strong_neg],
     ["극단 부정", COLORS.extreme_neg],
-  ];
-  legendItems.forEach(([name, hex]) => {
+  ].forEach(([name, hex]) => {
     const d = document.createElement("div");
     d.className = "swatch";
     d.innerHTML = `<span class="box" style="background:${hex}"></span>${name} (${hex})`;
@@ -79,130 +86,142 @@
   });
 
   // =========================
-  // 2) KEYWORDS (extend as you like)
-  //    - 이건 "색 분류" 용. (모양은 구조 신호로 전환)
+  // 2) KEYWORDS for COLOR CLASSIFICATION
+  //    (extend anytime; this is just a starter set)
   // =========================
   const KW = {
-    // Positive
     basic_pos: new Set(["good","nice","helpful","useful","easy","simple","convenient","cool","fun","works","reliable","smooth","accurate","decent","fine","okay"]),
-    strong_pos: new Set(["great","excellent","fantastic","wonderful","impressed","powerful","brilliant","outstanding","productive","valuable"]),
+    strong_pos: new Set(["great","excellent","fantastic","wonderful","impressed","powerful","brilliant","outstanding","productive","valuable","amazing"]),
     attach_pos: new Set(["love","loved","loving","favorite","favourite","obsessed","addicted","bestie","sister","everything","blessing","grateful","indispensable"]),
     extreme_pos: new Set(["best","perfect","10/10","five","stars","must-have","life-changing","beyond","mind","blowing","goat"]),
 
-    // Negative
-    mild_neg: new Set(["slow","laggy","buggy","glitchy","glitch","annoying","confusing","frustrating","limited","not","working","issue","problem","crash","crashes","freeze","freezes","stutter"]),
-    strong_neg: new Set(["bad","terrible","horrible","ridiculous","unacceptable","useless","waste","misleading","unfair","overpriced","greedy"]),
+    mild_neg: new Set(["slow","laggy","buggy","glitchy","glitch","annoying","confusing","frustrating","limited","not","working","issue","problem","crash","crashes","freeze","freezes","stutter","stutters"]),
+    strong_neg: new Set(["bad","terrible","horrible","ridiculous","unacceptable","useless","waste","misleading","unfair","overpriced","greedy","broken"]),
     extreme_neg: new Set(["worst","scam","scammers","fraud","toxic","disgusting","trash","junk","poison","delete","uninstall","bye","done","never","again"]),
   };
 
   // =========================
-  // 3) SHAPE TRIGGERS (모양 전환)
+  // 3) SHAPE TRIGGERS (TYPE switches)
   // =========================
   const TRIG = {
     type2_contrast: new Set(["but","however","though","although","yet"]),
-    type3_time: new Set(["now","still","again","anymore","since","lately","recently","today","yesterday","always"]),
-    type4_break: new Set(["delete","uninstall","bye","done"]), // plus "never again" handled separately
+    type3_time: new Set(["now","still","again","anymore","since","lately","recently","today","yesterday","already"]),
+    type4_break: new Set(["delete","uninstall","bye","done"]),
   };
 
   // =========================
-  // 4) TOKENIZE
+  // 4) PITCH MAP (0..1)  higher = higher on staff
+  //    - Treat as "arousal/activation" rather than literal musical pitch
   // =========================
-  function tokenize(text) {
-    // keep simple: words + numbers + / + '
+  const BASE_PITCH = {
+    basic_pos: 0.30,
+    strong_pos: 0.48,
+    attach_pos: 0.62,
+    extreme_pos: 0.86,
+    mild_neg: 0.34,
+    strong_neg: 0.66,
+    extreme_neg: 0.94,
+  };
+
+  // =========================
+  // 5) TOKENIZE + SENTENCE SPLIT
+  // =========================
+  function splitSentences(text) {
+    // Keep it simple: split by . ! ? or line breaks
     return (text || "")
-      .trim()
-      .split(/\s+/g)
-      .map(t => t.replace(/[^\w'\/-]/g, "")) // strip punctuation
+      .split(/[\n\r]+|(?<=[.!?])\s+/g)
+      .map(s => s.trim())
       .filter(Boolean);
   }
 
-  // helper: detect "never again" bigram
-  function hasNeverAgain(tokens, i) {
-    return (tokens[i] === "never" && tokens[i+1] === "again");
+  function tokenize(sentence) {
+    return sentence
+      .trim()
+      .split(/\s+/g)
+      .map(t => t.replace(/[^\w'\/-]/g, "")) // strip punctuation but keep wordish chars
+      .filter(Boolean);
+  }
+
+  function hasNeverAgain(tokensLower, i) {
+    return (tokensLower[i] === "never" && tokensLower[i+1] === "again");
   }
 
   // =========================
-  // 5) COLOR PICK: based on keyword hits
+  // 6) DETERMINISTIC RNG
   // =========================
-  function pickColorForSegment(segTokens) {
+  let seed = 1234567;
+  function rand() {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  }
+  function randRange(a,b){ return a + (b-a)*rand(); }
+
+  // =========================
+  // 7) COLOR PICK + INTENSITY
+  // =========================
+  function scoreHits(tokens) {
     const hits = {
       basic_pos: 0, strong_pos: 0, attach_pos: 0, extreme_pos: 0,
       mild_neg: 0, strong_neg: 0, extreme_neg: 0,
     };
-
-    for (const raw of segTokens) {
+    for (const raw of tokens) {
       const t = raw.toLowerCase();
-
-      // special cases
+      for (const k in KW) if (KW[k].has(t)) hits[k] += 1;
       if (t === "10/10") hits.extreme_pos += 2;
-
-      for (const k in KW) {
-        if (KW[k].has(t)) hits[k] += 1;
-      }
     }
+    return hits;
+  }
 
-    // pick max
-    let bestK = "basic_pos";
-    let bestV = -1;
+  function pickCategory(tokens) {
+    const hits = scoreHits(tokens);
+    let bestK = "basic_pos", bestV = -1;
     for (const k in hits) {
       if (hits[k] > bestV) { bestV = hits[k]; bestK = k; }
     }
+    if (bestV <= 0) return { key:"basic_pos", hex: COLORS.basic_pos, hitCount: 0 };
+    return { key: bestK, hex: COLORS[bestK], hitCount: bestV };
+  }
 
-    // if no hits at all, default basic_pos (or you can choose a neutral)
-    if (bestV <= 0) return { key: "basic_pos", hex: COLORS.basic_pos, strength: 0 };
-    return { key: bestK, hex: COLORS[bestK], strength: bestV };
+  function intensityFromTokens(tokens) {
+    // 0..10 : based on keyword hits + sentence length a bit
+    const hits = scoreHits(tokens);
+    const sumHits = Object.values(hits).reduce((a,b)=>a+b,0);
+    const lenBoost = Math.min(3, Math.floor(tokens.length / 6)); // long talk feels stronger
+    const base = sumHits * 2 + lenBoost; // simple
+    return Math.max(0, Math.min(10, base));
+  }
+
+  function thicknessFromIntensity(intensity) {
+    // volume -> thickness (px)
+    return 2 + (intensity / 10) * 22; // 2..24
+  }
+
+  function opacityFromIntensity(intensity) {
+    return Math.min(0.96, 0.22 + (intensity/10)*0.70);
   }
 
   // =========================
-  // 6) SHAPE TYPE SCAN: sentence progresses left->right; type switches at triggers
+  // 8) TYPE SCAN (progressive switching)
   // =========================
-  function shapeTypeAt(tokens, idx, currentType) {
-    const t = tokens[idx]?.toLowerCase();
+  function initialType(tokensLower) {
+    const first = tokensLower[0];
+    if (first === "i" || first === "i'm" || first === "im" || first === "my") return 1;
+    return 1; // default start
+  }
 
-    // TYPE 4: break (hard stop)
-    if (hasNeverAgain(tokens.map(x=>x.toLowerCase()), idx)) return 4;
+  function nextType(tokensLower, i, curType) {
+    if (hasNeverAgain(tokensLower, i)) return 4;
+    const t = tokensLower[i];
+
     if (TRIG.type4_break.has(t)) return 4;
-
-    // TYPE 3: time
     if (TRIG.type3_time.has(t)) return 3;
-
-    // TYPE 2: contrast
     if (TRIG.type2_contrast.has(t)) return 2;
 
-    // Otherwise keep current
-    return currentType;
-  }
-
-  // TYPE 1 init: starts with first-person
-  function initialType(tokens) {
-    const first = tokens[0]?.toLowerCase();
-    if (first === "i" || first === "i'm" || first === "im" || first === "my") return 1;
-    return 1; // default: 1 (you asked for 1인칭이면 1번, 아니어도 기본 흐름은 1로 시작하는 게 보기 좋음)
+    return curType;
   }
 
   // =========================
-  // 7) DRAW PRIMITIVES
-  // =========================
-  let seed = 12345;
-  function rand() {
-    // deterministic RNG
-    seed = (seed * 1664525 + 1013904223) % 4294967296;
-    return seed / 4294967296;
-  }
-
-  function roundedRect(ctx, x, y, w, h, r) {
-    const rr = Math.min(r, w/2, h/2);
-    ctx.beginPath();
-    ctx.moveTo(x+rr, y);
-    ctx.arcTo(x+w, y, x+w, y+h, rr);
-    ctx.arcTo(x+w, y+h, x, y+h, rr);
-    ctx.arcTo(x, y+h, x, y, rr);
-    ctx.arcTo(x, y, x+w, y, rr);
-    ctx.closePath();
-  }
-
-  // =========================
-  // 8) GENERATE LAYOUT
+  // 9) DRAW: BLOKKEN-LIKE SCORE
   // =========================
   const canvas = document.getElementById("c");
   const ctx = canvas.getContext("2d");
@@ -213,154 +232,211 @@
     ctx.fillRect(0,0,canvas.width,canvas.height);
   }
 
-  function draw(text) {
-    clearCanvas();
+  function drawStaff(yTop, staffH, lines=3) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(0,0,0,0.20)";
+    ctx.lineWidth = 1;
+    for (let i=0; i<=lines; i++) {
+      const y = yTop + (staffH * i/lines);
+      ctx.beginPath();
+      ctx.moveTo(50, y);
+      ctx.lineTo(canvas.width - 50, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 
-    const tokens = tokenize(text);
+  function yFromPitch(pitch01, yTop, staffH) {
+    // higher pitch => closer to yTop
+    return yTop + (1 - pitch01) * staffH;
+  }
+
+  // Core: render one sentence as multiple "runs"
+  function drawSentence(sentence, yTop, staffH) {
+    const tokens = tokenize(sentence);
+    const tokensLower = tokens.map(t => t.toLowerCase());
     if (!tokens.length) return;
 
-    // We'll render as horizontal "scanline" blocks with wrapping.
-    const margin = 70;
-    let x = margin;
-    let y = margin;
-    const lineH = 64;     // distance between rows
-    const maxX = canvas.width - margin;
+    // progressive run segmentation by TYPE
+    let curType = initialType(tokensLower);
+    let runTokens = [];
+    let runType = curType;
 
-    let type = initialType(tokens);
+    // layout params
+    const xStart = 70;
+    const xEnd = canvas.width - 70;
+    const usableW = xEnd - xStart;
 
-    // We’ll keep segments: same TYPE runs are grouped so color can differ per run
-    let run = [];
-    let runType = type;
+    // time mapping: each token consumes width proportional to its character length
+    const weights = tokens.map(t => Math.max(1.0, Math.min(10, t.length / 3)));
+    const totalW = weights.reduce((a,b)=>a+b,0);
+
+    let x = xStart;
 
     function flushRun() {
-      if (!run.length) return;
+      if (!runTokens.length) return { stop:false };
 
-      // color per run based on keyword hits inside this run
-      const col = pickColorForSegment(run);
-      const hex = col.hex;
+      // color + pitch + volume for this run
+      const cat = pickCategory(runTokens);
+      const intensity = intensityFromTokens(runTokens);
+      const thick = thicknessFromIntensity(intensity);
+      const alpha = opacityFromIntensity(intensity);
 
-      // visual parameters by type
-      // NOTE: 모양은 "말하는 방식(구조)"만 담당.
-      const baseH = (runType === 1) ? 22 : (runType === 2) ? 14 : (runType === 3) ? 10 : 44;
-      const blur = (runType === 3) ? 0 : 0; // keep crisp; you can add blur via ctx.filter if needed
-      const radius = (runType === 1) ? 8 : (runType === 2) ? 3 : (runType === 4) ? 2 : 6;
+      // pitch: category base + small jitter + type influence
+      let pitch = BASE_PITCH[cat.key] ?? 0.4;
+      // TYPE influence: 2 = slight drop (hesitation), 3 = repeated (stable band), 4 = spike (final)
+      if (runType === 2) pitch -= 0.08;
+      if (runType === 3) pitch += 0.02;
+      if (runType === 4) pitch += 0.10;
+      pitch = Math.max(0.05, Math.min(0.98, pitch + randRange(-0.03, 0.03)));
 
-      // strength influences opacity and slight size
-      const opacity = Math.min(0.95, 0.25 + (col.strength * 0.12));
-      const h = baseH + Math.min(18, col.strength * 2);
+      const y = yFromPitch(pitch, yTop, staffH);
 
-      // Build geometry for each token in run, sequentially
-      for (let i=0; i<run.length; i++) {
-        const raw = run[i];
-        const t = raw.toLowerCase();
-        const w = Math.max(28, Math.min(320, raw.length * 18 + 20)); // width by token length
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = cat.hex;
 
-        // wrap
-        if (x + w > maxX) {
-          x = margin;
-          y += lineH;
-          if (y > canvas.height - margin - lineH) break;
-        }
+      // compute run width from its token weights
+      let runWeight = 0;
+      for (const rt of runTokens) {
+        const idx = tokens.indexOf(rt); // not perfect for duplicates; ok for visuals
+      }
+      // better: sum by char length directly
+      runWeight = runTokens.reduce((a,t)=>a+Math.max(1.0, Math.min(10, t.length/3)), 0);
+      const runW = usableW * (runWeight / totalW);
 
-        // jitter for organic (very small)
-        const jx = (rand() - 0.5) * 6;
-        const jy = (rand() - 0.5) * 6;
+      // BLOKKEN STYLE:
+      // - TYPE1: few medium rectangles, slight gaps (stable)
+      // - TYPE2: more fragments + bigger gaps (broken)
+      // - TYPE3: dotted squares (repetition)
+      // - TYPE4: one large terminal block and stop
 
-        ctx.save();
-        ctx.globalAlpha = opacity;
-        ctx.fillStyle = hex;
-
-        if (blur) ctx.filter = `blur(${blur}px)`;
-
-        if (runType === 1) {
-          // TYPE 1: thick stable bar
-          roundedRect(ctx, x + jx, y + jy, w, h, radius);
-          ctx.fill();
-
-        } else if (runType === 2) {
-          // TYPE 2: contrast -> "broken bar"
-          const gap = 10 + rand()*10;
-          const w1 = Math.max(12, w * (0.45 + rand()*0.15));
-          const w2 = Math.max(12, w - w1 - gap);
-          roundedRect(ctx, x + jx, y + jy, w1, h, radius);
-          ctx.fill();
-          roundedRect(ctx, x + jx + w1 + gap, y + jy + (rand()-0.5)*6, w2, h, radius);
-          ctx.fill();
-
-        } else if (runType === 3) {
-          // TYPE 3: time -> dots/repetition
-          const dots = Math.max(3, Math.floor(w / 26));
-          for (let d=0; d<dots; d++) {
-            const dx = x + (d * (w / dots)) + (rand()-0.5)*8;
-            const dy = y + (h/2) + (rand()-0.5)*10;
-            const r = 4 + rand()*8 + Math.min(10, col.strength);
-            ctx.beginPath();
-            ctx.arc(dx, dy, r, 0, Math.PI*2);
-            ctx.fill();
-          }
-
-        } else if (runType === 4) {
-          // TYPE 4: break -> big terminal block then STOP
-          const W = Math.min(520, w + 220);
-          const H = Math.min(140, h + 60);
-          const yy = y + jy - 10;
-          roundedRect(ctx, x + jx, yy, W, H, 4);
-          ctx.fill();
-          ctx.restore();
-
-          // stop rendering further content
-          x = margin;
-          y += lineH;
-          run.length = 0;
-          return "STOP";
-        }
-
+      if (runType === 4) {
+        // terminal block: big, dense
+        const W = Math.min(usableW * 0.35, Math.max(120, runW + 160));
+        const H = Math.min(staffH * 0.70, Math.max(40, thick * 3.0));
+        ctx.fillRect(x, y - H/2, W, H);
         ctx.restore();
-        x += w + 16; // spacing
+        return { stop:true };
       }
 
-      run = [];
-      return "OK";
+      if (runType === 3) {
+        // dotted: small squares along run
+        const dotN = Math.max(6, Math.floor(runW / 24));
+        const size = Math.max(6, Math.min(18, thick * 0.7));
+        for (let i=0; i<dotN; i++) {
+          const dx = x + i * (runW / dotN) + randRange(-4, 4);
+          const dy = y + randRange(-10, 10);
+          ctx.fillRect(dx, dy - size/2, size, size);
+        }
+        x += runW + 14;
+        ctx.restore();
+        return { stop:false };
+      }
+
+      // TYPE1 or TYPE2: fragment blocks
+      const fragBase = (runType === 1) ? 3 : 6; // more pieces when broken
+      const fragN = Math.max(2, Math.min(10, fragBase + Math.floor(runTokens.length/3)));
+
+      let remaining = runW;
+      let xx = x;
+
+      for (let i=0; i<fragN; i++) {
+        const minW = (runType === 1) ? 30 : 18;
+        const maxW = (runType === 1) ? 140 : 90;
+        const w = Math.min(remaining, randRange(minW, maxW));
+        const h = Math.max(8, Math.min(staffH * 0.55, thick * randRange(1.2, 2.4)));
+
+        // slight vertical jitter
+        const dy = randRange(-12, 12);
+
+        ctx.fillRect(xx, (y + dy) - h/2, w, h);
+
+        const gap = (runType === 1) ? randRange(10, 22) : randRange(18, 46); // bigger gaps for broken
+        xx += w + gap;
+        remaining -= (w + gap);
+        if (remaining < 10) break;
+      }
+
+      x += runW + ((runType === 1) ? 16 : 22);
+      ctx.restore();
+      return { stop:false };
     }
 
-    // scan tokens and build runs by TYPE changes
+    // scan + build runs
     for (let i=0; i<tokens.length; i++) {
-      const low = tokens[i].toLowerCase();
+      const nt = nextType(tokensLower, i, curType);
 
-      // decide next type at this token boundary
-      const nextType = shapeTypeAt(tokens.map(x=>x.toLowerCase()), i, type);
-
-      // if type changes, flush current run
-      if (nextType !== type) {
+      if (nt !== curType) {
         const res = flushRun();
-        if (res === "STOP") return;
-        type = nextType;
-        runType = type;
+        if (res.stop) return;
+        curType = nt;
+        runType = curType;
+        runTokens = [];
       }
 
-      // push token to run
-      run.push(tokens[i]);
+      runTokens.push(tokens[i]);
 
-      // if the token itself triggers Type4 ("never again" bigram), flush immediately to stop
-      if (type === 4) {
-        const res = flushRun();
-        if (res === "STOP") return;
-      }
-
-      // handle bigram consumption for "never again"
-      if (hasNeverAgain(tokens.map(x=>x.toLowerCase()), i)) {
-        // include "again" as well in the current run, then stop
-        if (i+1 < tokens.length) run.push(tokens[i+1]);
-        const res = flushRun();
+      // if Type4 triggered, flush immediately to stop
+      if (curType === 4) {
+        // include "again" if it was "never again"
+        if (hasNeverAgain(tokensLower, i) && i+1 < tokens.length) runTokens.push(tokens[i+1]);
+        flushRun();
         return;
       }
+
+      // skip the second word of "never again" bigram to avoid double handling
+      if (hasNeverAgain(tokensLower, i)) i++;
     }
 
     flushRun();
   }
 
+  function draw(text) {
+    clearCanvas();
+
+    // Title-like header (optional)
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.85)";
+    ctx.font = "600 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+    ctx.fillText("Emotion Score", 70, 54);
+    ctx.restore();
+
+    // labels highest/lowest tone
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+    ctx.fillText("highest tone", 70, 90);
+    ctx.fillText("lowest tone", 70, 0); // will place per staff below
+    ctx.restore();
+
+    const sentences = splitSentences(text);
+    const marginTop = 110;
+    const gap = 34;
+    const staffH = 120;
+
+    let y = marginTop;
+
+    for (let s=0; s<sentences.length; s++) {
+      if (y + staffH > canvas.height - 60) break;
+
+      drawStaff(y, staffH, 3);
+
+      // lowest tone label per staff
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillText("lowest tone", 70, y + staffH + 16);
+      ctx.restore();
+
+      drawSentence(sentences[s], y, staffH);
+
+      y += staffH + gap;
+    }
+  }
+
   // =========================
-  // 9) UI
+  // 10) UI handlers
   // =========================
   const inputEl = document.getElementById("input");
   document.getElementById("btnGen").addEventListener("click", () => draw(inputEl.value));
@@ -368,7 +444,7 @@
   document.getElementById("btnDownload").addEventListener("click", () => {
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
-    a.download = "emotion-xray.png";
+    a.download = "emotion-score.png";
     a.click();
   });
 
