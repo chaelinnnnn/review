@@ -235,7 +235,6 @@ function draw(text){
   const DPR    = window.devicePixelRatio||1;
 
   // ── Layout ─────────────────────────────────────────────────────
-  const CELL_W  = 46;    // width per word cell
   const ROW_H   = 160;   // height of the color block area
   const RULER_H = 18;    // ruler strip below
   const INDEX_H = 20;    // circle index row above
@@ -244,8 +243,12 @@ function draw(text){
   const PAD_T   = 10;
   const PAD_B   = 12;
 
+  // Fill the full stage width — compute CELL_W from available space
+  const stageEl = document.querySelector('.stage');
+  const availW  = stageEl.clientWidth - PAD_L*2 - 48;
+  const CELL_W  = Math.max(12, Math.floor(availW / N));
+
   // Two rows: row0 = positive emotions, row1 = negative emotions
-  // Both show ALL emotion colors, split by pos/neg for clarity
   const ROWS = 2;
   const totalW = PAD_L*2 + N*CELL_W;
   const totalH = PAD_T + ROWS*(INDEX_H+ROW_H+RULER_H) + (ROWS-1)*GAP + PAD_B;
