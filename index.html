@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Emotion Score Generator (Blokken-style)</title>
+  <title>Emotion Waveform Generator</title>
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
     .wrap { display: grid; grid-template-columns: 380px 1fr; gap: 16px; align-items: start; }
-    textarea { width: 100%; height: 220px; padding: 10px; font-size: 14px; }
+    textarea { width: 100%; height: 240px; padding: 10px; font-size: 14px; }
     button { padding: 10px 12px; font-size: 14px; cursor: pointer; }
     .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
     .hint { font-size: 12px; color:#333; line-height: 1.6; margin-top:10px; }
@@ -19,11 +19,11 @@
   </style>
 </head>
 <body>
-  <h1 style="margin:0 0 10px 0;">Emotion X-ray → Graphic Score Generator</h1>
+  <h1 style="margin:0 0 10px 0;">Emotion → Voice Waveform Generator</h1>
 
   <div class="wrap">
     <div>
-      <textarea id="input">I love this app but it crashes now</textarea>
+      <textarea id="input">I love this app but it crashes now. I paid for premium and still see ads. Never again, I'm done.</textarea>
 
       <div class="row">
         <button id="btnGen">Generate</button>
@@ -32,7 +32,17 @@
       </div>
 
       <div class="hint">
-        <div><span class="pill">한 문장</span> 한 문장은 “하나의 연결선” 위에 끊긴 블록들이 얹히는 구조</div>
+        <div><span class="pill">Waveform</span> 한 문장 = 한 파형(좌→우 진행)</div>
+        <div><span class="pill">Color</span> 감정 카테고리(네 HEX)로 채움</div>
+        <div><span class="pill">Pitch</span> 각성도(흥분도) → 라인 위치(위/아래)</div>
+        <div><span class="pill">Volume</span> 강도 → 파형 진폭(두께)</div>
+        <div style="margin-top:8px;">
+          <b>구간 전환</b><br/>
+          • 기본: 안정적인 진폭<br/>
+          • 접속사(but/however/though/although/yet) 이후: 불규칙/찢김<br/>
+          • 시간표현(now/still/again/anymore/since/lately/recently/already) 이후: 주기적 진동<br/>
+          • 단절(delete/uninstall/bye/done/never again) 이후: 큰 스파이크 + 감쇠 후 종료
+        </div>
       </div>
 
       <div class="legend" id="legend"></div>
@@ -45,17 +55,20 @@
 
 <script>
 (() => {
+  // =========================
+  // 1) USER COLOR PALETTE (fixed)
+  // =========================
   const COLORS = {
-    basic_pos:   "#00FF90",
-    strong_pos:  "#DFFF29",
-    attach_pos:  "#FF6134",
-    extreme_pos: "#F7399D",
-    mild_neg:    "#00FFFF",
-    strong_neg:  "#006AA0",
-    extreme_neg: "#020605",
+    basic_pos:   "#00FF90", // 기본 긍정
+    strong_pos:  "#DFFF29", // 강화 긍정
+    attach_pos:  "#FF6134", // 감정 애착
+    extreme_pos: "#F7399D", // 극단 긍정
+    mild_neg:    "#00FFFF", // 약한 불만
+    strong_neg:  "#006AA0", // 강한 불만
+    extreme_neg: "#020605", // 극단 부정
   };
 
-  // Legend
+  // legend
   const legendEl = document.getElementById("legend");
   [
     ["기본 긍정", COLORS.basic_pos],
@@ -72,32 +85,46 @@
     legendEl.appendChild(d);
   });
 
+  // =========================
+  // 2) KEYWORDS for COLOR CLASSIFICATION (starter)
+  // =========================
   const KW = {
     basic_pos: new Set(["good","nice","helpful","useful","easy","simple","convenient","cool","fun","works","reliable","smooth","accurate","decent","fine","okay"]),
     strong_pos: new Set(["great","excellent","fantastic","wonderful","impressed","powerful","brilliant","outstanding","productive","valuable","amazing"]),
     attach_pos: new Set(["love","loved","loving","favorite","favourite","obsessed","addicted","bestie","sister","everything","blessing","grateful","indispensable"]),
     extreme_pos: new Set(["best","perfect","10/10","five","stars","must-have","life-changing","beyond","mind","blowing","goat"]),
+
     mild_neg: new Set(["slow","laggy","buggy","glitchy","glitch","annoying","confusing","frustrating","limited","not","working","issue","problem","crash","crashes","freeze","freezes","stutter","stutters"]),
     strong_neg: new Set(["bad","terrible","horrible","ridiculous","unacceptable","useless","waste","misleading","unfair","overpriced","greedy","broken"]),
     extreme_neg: new Set(["worst","scam","scammers","fraud","toxic","disgusting","trash","junk","poison","delete","uninstall","bye","done","never","again"]),
   };
 
+  // =========================
+  // 3) TRIGGERS for waveform behavior switches
+  // =========================
   const TRIG = {
-    type2_contrast: new Set(["but","however","though","although","yet"]),
-    type3_time: new Set(["now","still","again","anymore","since","lately","recently","today","yesterday","already"]),
-    type4_break: new Set(["delete","uninstall","bye","done"]),
+    contrast: new Set(["but","however","though","although","yet"]),
+    time: new Set(["now","still","again","anymore","since","lately","recently","today","yesterday","already"]),
+    break: new Set(["delete","uninstall","bye","done"]),
   };
 
+  // =========================
+  // 4) PITCH MAP (0..1), higher => closer to top
+  // =========================
   const BASE_PITCH = {
-    basic_pos: 0.30, strong_pos: 0.48, attach_pos: 0.62, extreme_pos: 0.86,
-    mild_neg: 0.34, strong_neg: 0.66, extreme_neg: 0.94,
+    basic_pos: 0.40,
+    strong_pos: 0.55,
+    attach_pos: 0.68,
+    extreme_pos: 0.86,
+    mild_neg: 0.34,
+    strong_neg: 0.58,
+    extreme_neg: 0.18, // extreme negative -> "low rumble" (원하면 0.90로 바꿔 '비명'으로)
   };
 
+  // =========================
+  // 5) SPLIT + TOKENIZE
+  // =========================
   function splitSentences(text) {
-    // ✅ “한 문장=한 줄” 원하면 아래처럼 '줄바꿈' 기준만으로도 가능.
-    // 지금은 마침표로도 나뉘게 되어있으니, 원하면 아래 한 줄로 바꿔도 됨:
-    // return (text || "").split(/[\n\r]+/g).map(s=>s.trim()).filter(Boolean);
-
     return (text || "")
       .split(/[\n\r]+|(?<=[.!?])\s+/g)
       .map(s => s.trim())
@@ -114,6 +141,9 @@
     return (tokensLower[i] === "never" && tokensLower[i+1] === "again");
   }
 
+  // =========================
+  // 6) RNG
+  // =========================
   let seed = 1234567;
   function rand() {
     seed = (seed * 1664525 + 1013904223) % 4294967296;
@@ -121,6 +151,9 @@
   }
   function randRange(a,b){ return a + (b-a)*rand(); }
 
+  // =========================
+  // 7) CATEGORY + INTENSITY
+  // =========================
   function scoreHits(tokens) {
     const hits = {
       basic_pos: 0, strong_pos: 0, attach_pos: 0, extreme_pos: 0,
@@ -145,6 +178,7 @@
   }
 
   function intensityFromTokens(tokens) {
+    // 0..10
     const hits = scoreHits(tokens);
     const sumHits = Object.values(hits).reduce((a,b)=>a+b,0);
     const lenBoost = Math.min(3, Math.floor(tokens.length / 6));
@@ -152,28 +186,32 @@
     return Math.max(0, Math.min(10, base));
   }
 
-  function thicknessFromIntensity(intensity) {
-    return 2 + (intensity / 10) * 22;
-  }
-  function opacityFromIntensity(intensity) {
-    return Math.min(0.96, 0.22 + (intensity/10)*0.70);
-  }
-
-  function initialType(tokensLower) {
-    const first = tokensLower[0];
-    if (first === "i" || first === "i'm" || first === "im" || first === "my") return 1;
-    return 1;
+  // volume mapping
+  function ampFromIntensity(intensity, staffH) {
+    // waveform amplitude (px)
+    return 6 + (intensity/10) * (staffH * 0.33); // 6..~40
   }
 
-  function nextType(tokensLower, i, curType) {
+  function alphaFromIntensity(intensity) {
+    return Math.min(0.95, 0.20 + (intensity/10) * 0.75);
+  }
+
+  // =========================
+  // 8) WAVEFORM MODE SWITCHING (Type-like)
+  // =========================
+  // mode: 1 basic, 2 broken/noisy, 3 periodic, 4 spike+decay end
+  function nextMode(tokensLower, i, curMode) {
     if (hasNeverAgain(tokensLower, i)) return 4;
     const t = tokensLower[i];
-    if (TRIG.type4_break.has(t)) return 4;
-    if (TRIG.type3_time.has(t)) return 3;
-    if (TRIG.type2_contrast.has(t)) return 2;
-    return curType;
+    if (TRIG.break.has(t)) return 4;
+    if (TRIG.time.has(t)) return 3;
+    if (TRIG.contrast.has(t)) return 2;
+    return curMode;
   }
 
+  // =========================
+  // 9) DRAW
+  // =========================
   const canvas = document.getElementById("c");
   const ctx = canvas.getContext("2d");
 
@@ -185,7 +223,7 @@
 
   function drawStaff(yTop, staffH, lines=3) {
     ctx.save();
-    ctx.strokeStyle = "rgba(0,0,0,0.18)";
+    ctx.strokeStyle = "rgba(0,0,0,0.15)";
     ctx.lineWidth = 1;
     for (let i=0; i<=lines; i++) {
       const y = yTop + (staffH * i/lines);
@@ -201,151 +239,150 @@
     return yTop + (1 - pitch01) * staffH;
   }
 
-  // ✅ NEW: 연결선(한 문장 = 하나의 흐름)
-  function drawContinuityLine(xStart, xEnd, y, colorHex) {
+  // Draw filled waveform (upper+lower)
+  function drawWaveFilled(pointsX, pointsAmp, yCenter, colorHex, alpha) {
     ctx.save();
-    ctx.strokeStyle = colorHex;         // 감정색으로 연결선
-    ctx.globalAlpha = 0.25;            // 너무 세지 않게
-    ctx.lineWidth = 2;                 // 얇게
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = colorHex;
+
+    // upper
     ctx.beginPath();
-    ctx.moveTo(xStart, y);
-    ctx.lineTo(xEnd, y);
-    ctx.stroke();
+    ctx.moveTo(pointsX[0], yCenter - pointsAmp[0]);
+    for (let i=1; i<pointsX.length; i++) {
+      ctx.lineTo(pointsX[i], yCenter - pointsAmp[i]);
+    }
+    // lower (reverse)
+    for (let i=pointsX.length-1; i>=0; i--) {
+      ctx.lineTo(pointsX[i], yCenter + pointsAmp[i]);
+    }
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
   }
 
-  function drawSentence(sentence, yTop, staffH) {
+  function drawSentenceWave(sentence, yTop, staffH) {
     const tokens = tokenize(sentence);
     const tokensLower = tokens.map(t => t.toLowerCase());
     if (!tokens.length) return;
 
+    // overall color/pitch based on whole sentence
+    const overallCat = pickCategory(tokens);
+    const overallIntensity = intensityFromTokens(tokens);
+    const baseAmp = ampFromIntensity(overallIntensity, staffH);
+    const baseAlpha = alphaFromIntensity(overallIntensity);
+
+    let pitch = (BASE_PITCH[overallCat.key] ?? 0.5) + randRange(-0.03, 0.03);
+    pitch = Math.max(0.05, Math.min(0.95, pitch));
+    const yCenter = yFromPitch(pitch, yTop, staffH);
+
+    // x mapping: token weights to time width
     const xStart = 70;
     const xEnd = canvas.width - 70;
     const usableW = xEnd - xStart;
 
-    // 문장 전체 카테고리(연결선 색용)
-    const overallCat = pickCategory(tokens);
-    let overallPitch = (BASE_PITCH[overallCat.key] ?? 0.4) + randRange(-0.02, 0.02);
-    overallPitch = Math.max(0.05, Math.min(0.98, overallPitch));
-    const yBase = yFromPitch(overallPitch, yTop, staffH);
-
-    // ✅ 연결선 먼저 그리기 (한 문장 흐름)
-    drawContinuityLine(xStart, xEnd, yBase, overallCat.hex);
-
-    // time mapping weights
     const weights = tokens.map(t => Math.max(1.0, Math.min(10, t.length / 3)));
     const totalW = weights.reduce((a,b)=>a+b,0);
-    let x = xStart;
 
-    let curType = initialType(tokensLower);
+    // We'll build runs by mode switching and draw each run as a waveform segment.
+    let mode = 1;
     let runTokens = [];
-    let runType = curType;
-
-    function flushRun(runWeight) {
-      if (!runTokens.length) return { stop:false, usedW: 0 };
-
-      const cat = pickCategory(runTokens);
-      const intensity = intensityFromTokens(runTokens);
-      const thick = thicknessFromIntensity(intensity);
-      const alpha = opacityFromIntensity(intensity);
-
-      // run width
-      const runW = usableW * (runWeight / totalW);
-
-      // pitch per run: base from category, but still “attached” to sentence baseline
-      let pitch = (BASE_PITCH[cat.key] ?? 0.4);
-      if (runType === 2) pitch -= 0.06;
-      if (runType === 3) pitch += 0.02;
-      if (runType === 4) pitch += 0.10;
-      pitch = Math.max(0.05, Math.min(0.98, pitch + randRange(-0.03, 0.03)));
-      const y = yFromPitch(pitch, yTop, staffH);
-
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = cat.hex;
-
-      if (runType === 4) {
-        const W = Math.min(usableW * 0.35, Math.max(140, runW + 180));
-        const H = Math.min(staffH * 0.70, Math.max(46, thick * 3.0));
-        ctx.fillRect(x, y - H/2, W, H);
-        ctx.restore();
-        return { stop:true, usedW: runW };
-      }
-
-      if (runType === 3) {
-        const dotN = Math.max(6, Math.floor(runW / 24));
-        const size = Math.max(6, Math.min(18, thick * 0.7));
-        for (let i=0; i<dotN; i++) {
-          const dx = x + i * (runW / dotN) + randRange(-4, 4);
-          // dot y는 baseline 근처로 오게 약간만 흔들기
-          const dy = yBase + randRange(-10, 10);
-          ctx.fillRect(dx, dy - size/2, size, size);
-        }
-        ctx.restore();
-        return { stop:false, usedW: runW };
-      }
-
-      // TYPE1 / TYPE2 fragment blocks
-      const fragBase = (runType === 1) ? 3 : 6;
-      const fragN = Math.max(2, Math.min(10, fragBase + Math.floor(runTokens.length/3)));
-
-      let remaining = runW;
-      let xx = x;
-
-      for (let i=0; i<fragN; i++) {
-        const minW = (runType === 1) ? 30 : 18;
-        const maxW = (runType === 1) ? 140 : 90;
-        const w = Math.min(remaining, randRange(minW, maxW));
-        const h = Math.max(8, Math.min(staffH * 0.55, thick * randRange(1.2, 2.4)));
-
-        // fragment는 baseline에 더 붙여서 “하나의 문장” 느낌 강화
-        const dy = (runType === 2) ? randRange(-14, 14) : randRange(-10, 10);
-        ctx.fillRect(xx, (yBase + dy) - h/2, w, h);
-
-        const gap = (runType === 1) ? randRange(10, 22) : randRange(18, 46);
-        xx += w + gap;
-        remaining -= (w + gap);
-        if (remaining < 10) break;
-      }
-
-      ctx.restore();
-      return { stop:false, usedW: runW };
-    }
-
-    // scan tokens, accumulate run weight
     let runWeight = 0;
+    let xCursor = xStart;
+
+    function drawRun(runTokensLocal, runW, modeLocal) {
+      if (!runTokensLocal.length || runW <= 2) return { stop:false };
+
+      const cat = pickCategory(runTokensLocal);
+      const inten = intensityFromTokens(runTokensLocal);
+      const ampMax = ampFromIntensity(inten, staffH);
+      const alpha = alphaFromIntensity(inten);
+
+      // mode modifies waveform character
+      // 1 basic: smooth-ish random small fluctuations
+      // 2 broken: noisy + intermittent gaps
+      // 3 periodic: sine-like vibration
+      // 4 spike: single spike + decay (and stop)
+      const N = Math.max(120, Math.floor(runW / 4)); // resolution
+
+      const xs = new Array(N);
+      const amps = new Array(N);
+
+      for (let i=0; i<N; i++) {
+        const t = i / (N-1);
+        xs[i] = xCursor + t * runW;
+
+        if (modeLocal === 1) {
+          const noise = (rand() - 0.5) * 0.55;
+          const env = 0.55 + 0.45 * Math.sin(t * Math.PI); // gentle envelope
+          amps[i] = Math.max(0, ampMax * env * (0.55 + noise));
+
+        } else if (modeLocal === 2) {
+          // broken/noisy: higher jitter, plus random dropouts
+          const dropout = (rand() < 0.06) ? 0.0 : 1.0; // occasional silence gaps
+          const noise = (rand() - 0.5) * 1.3;
+          const env = 0.35 + 0.65 * Math.sin(t * Math.PI);
+          amps[i] = Math.max(0, ampMax * env * Math.max(0, 0.65 + noise) * dropout);
+
+        } else if (modeLocal === 3) {
+          // periodic: vibrato-like
+          const freq = randRange(10, 18); // cycles
+          const vib = 0.6 + 0.4 * Math.sin(2 * Math.PI * freq * t);
+          const env = 0.45 + 0.55 * Math.sin(t * Math.PI);
+          amps[i] = Math.max(0, ampMax * env * vib);
+
+        } else if (modeLocal === 4) {
+          // spike + decay
+          const spikePos = 0.18 + randRange(-0.05, 0.05);
+          const decay = Math.exp(-6.0 * Math.max(0, t - spikePos));
+          const spike = Math.exp(-((t - spikePos) * (t - spikePos)) / (2 * 0.0015));
+          const a = (0.25 * ampMax) + (2.2 * ampMax * spike) + (0.9 * ampMax * decay);
+          amps[i] = Math.max(0, a);
+        }
+      }
+
+      drawWaveFilled(xs, amps, yCenter, cat.hex, alpha);
+
+      if (modeLocal === 4) return { stop:true };
+      return { stop:false };
+    }
 
     for (let i=0; i<tokens.length; i++) {
       const w = weights[i];
-      const nt = nextType(tokensLower, i, curType);
+      const nm = nextMode(tokensLower, i, mode);
 
-      if (nt !== curType) {
-        const res = flushRun(runWeight);
-        if (res.stop) return;
-        x += res.usedW + ((curType === 2) ? 22 : 16);
-        curType = nt;
-        runType = curType;
+      if (nm !== mode) {
+        // flush current run
+        const runW = usableW * (runWeight / totalW);
+        const res = drawRun(runTokens, runW, mode);
+        xCursor += runW;
         runTokens = [];
         runWeight = 0;
+        mode = nm;
+        if (res.stop) return;
       }
 
       runTokens.push(tokens[i]);
       runWeight += w;
 
-      if (curType === 4) {
+      // if we are now in mode 4, flush immediately and stop
+      if (mode === 4) {
+        // include "again" if it was "never again"
         if (hasNeverAgain(tokensLower, i) && i+1 < tokens.length) {
           runTokens.push(tokens[i+1]);
           runWeight += weights[i+1];
         }
-        flushRun(runWeight);
+        const runW = usableW * (runWeight / totalW);
+        drawRun(runTokens, runW, mode);
         return;
       }
 
+      // skip second of never again
       if (hasNeverAgain(tokensLower, i)) i++;
     }
 
-    const last = flushRun(runWeight);
-    x += last.usedW;
+    // flush last
+    const lastW = usableW * (runWeight / totalW);
+    drawRun(runTokens, lastW, mode);
   }
 
   function draw(text) {
@@ -355,29 +392,35 @@
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,0.85)";
     ctx.font = "600 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-    ctx.fillText("Emotion Score", 70, 54);
+    ctx.fillText("Emotion Waveform", 70, 54);
     ctx.restore();
 
-    const sentences = splitSentences(text);
-
-    // ✅ 라벨은 “한 번만” 표시 (여러 줄이어도 중복 X)
+    // labels (once)
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,0.55)";
     ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
     ctx.fillText("highest tone", 70, 92);
-    ctx.fillText("lowest tone", 70, 92 + 120 + 16); // 첫 staff 기준 위치(보기용)
     ctx.restore();
 
+    const sentences = splitSentences(text);
     const marginTop = 110;
-    const gap = 34;
-    const staffH = 120;
+    const gap = 40;
+    const staffH = 130;
 
     let y = marginTop;
 
     for (let s=0; s<sentences.length; s++) {
       if (y + staffH > canvas.height - 60) break;
       drawStaff(y, staffH, 3);
-      drawSentence(sentences[s], y, staffH);
+
+      // lowest label per staff (optional; comment out if you want only once)
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillText("lowest tone", 70, y + staffH + 16);
+      ctx.restore();
+
+      drawSentenceWave(sentences[s], y, staffH);
       y += staffH + gap;
     }
   }
@@ -385,12 +428,14 @@
   // UI
   const inputEl = document.getElementById("input");
   document.getElementById("btnGen").addEventListener("click", () => draw(inputEl.value));
+
   document.getElementById("btnDownload").addEventListener("click", () => {
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
-    a.download = "emotion-score.png";
+    a.download = "emotion-waveform.png";
     a.click();
   });
+
   document.getElementById("btnRandomize").addEventListener("click", () => {
     seed = Math.floor(Math.random() * 1e9);
     draw(inputEl.value);
