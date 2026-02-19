@@ -6,13 +6,17 @@
 <title>Emotion Waveform</title>
 <style>
   :root{
-    --bg:#c7c7a6;            /* khaki/olive paper */
-    --panel:#e7e7d6;         /* light panel */
-    --panel2:#dedecb;        /* slightly darker panel */
-    --ink:#2b2b22;           /* dark olive text */
-    --muted:rgba(43,43,34,.55);
-    --line:rgba(43,43,34,.18);
-    --shadow:rgba(0,0,0,.08);
+    /* WHITE UI SYSTEM */
+    --bg:#ffffff;
+    --panel:#ffffff;
+    --panel2:#f6f6f6;
+    --ink:#111111;
+    --muted:rgba(0,0,0,.55);
+    --line:rgba(0,0,0,.14);
+    --shadow:rgba(0,0,0,.06);
+
+    /* Accent (matches your extreme_pos) */
+    --accent:#F7399D;
   }
 
   *{ box-sizing:border-box; }
@@ -23,7 +27,6 @@
     color:var(--ink);
   }
 
-  /* Layout: left UI column + right canvas */
   .app{
     display:grid;
     grid-template-columns: 420px 1fr;
@@ -32,14 +35,14 @@
     padding:28px;
   }
 
-  /* UI chrome */
+  /* Left column */
   .ui{
     position:sticky;
     top:20px;
     align-self:start;
   }
 
-  .tabs{
+  .topbar{
     display:flex;
     gap:10px;
     align-items:center;
@@ -47,31 +50,28 @@
   }
 
   .tab{
-    background:var(--panel2);
+    background:var(--panel);
     border:1px solid var(--line);
-    padding:10px 14px;
+    padding:12px 16px;
     font-size:12px;
-    letter-spacing:.08em;
+    letter-spacing:.10em;
     text-transform:uppercase;
     box-shadow: 0 1px 0 var(--shadow);
     user-select:none;
-  }
-  .tab.active{
-    background:var(--panel);
   }
 
   .btn-save{
     margin-left:auto;
     background:var(--panel);
     border:1px solid var(--line);
-    padding:10px 14px;
+    padding:12px 16px;
     font-size:12px;
-    letter-spacing:.08em;
+    letter-spacing:.10em;
     text-transform:uppercase;
     cursor:pointer;
     box-shadow: 0 1px 0 var(--shadow);
   }
-  .btn-save:hover{ filter:brightness(0.98); }
+  .btn-save:hover{ background:var(--panel2); }
 
   .panel{
     background:var(--panel);
@@ -84,67 +84,14 @@
   .panel h3{
     margin:0 0 10px 0;
     font-size:12px;
-    letter-spacing:.08em;
+    letter-spacing:.10em;
     text-transform:uppercase;
     color:var(--muted);
-  }
-
-  .grid2{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:12px;
-  }
-
-  .label{
-    font-size:11px;
-    letter-spacing:.06em;
-    text-transform:uppercase;
-    color:var(--muted);
-    margin-bottom:6px;
-  }
-
-  .fake-select{
-    height:34px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 10px;
-    background:var(--panel2);
-    border:1px solid var(--line);
-    font-size:12px;
-    color:var(--ink);
-    user-select:none;
-  }
-  .caret{
-    width:0;height:0;
-    border-left:5px solid transparent;
-    border-right:5px solid transparent;
-    border-top:6px solid var(--muted);
-    opacity:.9;
-  }
-
-  .fake-slider{
-    position:relative;
-    height:8px;
-    background:rgba(43,43,34,.12);
-    border:1px solid var(--line);
-    margin-top:8px;
-  }
-  .fake-slider::after{
-    content:"";
-    position:absolute;
-    left:22%;
-    top:-5px;
-    width:0;height:0;
-    border-left:6px solid transparent;
-    border-right:6px solid transparent;
-    border-top:10px solid #f7399d; /* accent triangle like ref */
-    filter:drop-shadow(0 1px 0 rgba(0,0,0,.08));
   }
 
   textarea{
     width:100%;
-    height:130px;
+    height:140px;
     resize:none;
     padding:10px;
     font-size:13px;
@@ -160,22 +107,89 @@
     gap:10px;
     margin-top:10px;
   }
+
   .btn{
     flex:1;
     background:var(--panel);
     border:1px solid var(--line);
-    padding:10px 12px;
+    padding:12px 12px;
     font-size:12px;
-    letter-spacing:.06em;
+    letter-spacing:.10em;
     text-transform:uppercase;
     cursor:pointer;
     box-shadow: 0 1px 0 var(--shadow);
   }
-  .btn:hover{ filter:brightness(0.985); }
+  .btn:hover{ background:var(--panel2); }
 
-  /* Right: canvas stage */
+  /* Status panel */
+  .status{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:10px;
+  }
+
+  .kv{
+    display:grid;
+    grid-template-columns: 120px 1fr;
+    gap:10px;
+    padding:10px;
+    border:1px solid var(--line);
+    background:var(--panel);
+  }
+  .k{
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  .v{
+    font-size:12px;
+    color:var(--ink);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 10px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    font-size:12px;
+  }
+  .sw{
+    width:12px;
+    height:12px;
+    border:1px solid rgba(0,0,0,.12);
+  }
+
+  .meter{
+    height:8px;
+    width:180px;
+    border:1px solid var(--line);
+    background:var(--panel2);
+    position:relative;
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .meter > span{
+    position:absolute;
+    left:0; top:0; bottom:0;
+    width:0%;
+    background:var(--accent);
+  }
+
+  .note{
+    font-size:12px;
+    color:var(--muted);
+    line-height:1.5;
+  }
+
+  /* Right stage */
   .stage{
-    background:transparent;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -184,14 +198,7 @@
   canvas{
     width:100%;
     max-width:1400px;
-    background:transparent; /* keep paper bg */
-  }
-
-  /* Small caption line (optional) */
-  .note{
-    font-size:12px;
-    color:var(--muted);
-    margin-top:8px;
+    background:transparent;
   }
 
   @media (max-width: 980px){
@@ -203,85 +210,70 @@
 <body>
 
 <div class="app">
-  <!-- LEFT UI (graphic-style, mostly non-functional controls) -->
+  <!-- LEFT UI -->
   <div class="ui">
-    <div class="tabs">
-      <div class="tab active">Layering</div>
-      <div class="tab">Animation</div>
-      <button class="btn-save" id="btnSaveTop">Save</button>
-    </div>
-
-    <div class="panel">
-      <h3>Layer 1</h3>
-      <div class="grid2">
-        <div>
-          <div class="label">Particle set</div>
-          <div class="fake-select">WAVEFORM <span class="caret"></span></div>
-        </div>
-        <div>
-          <div class="label">Color set</div>
-          <div class="fake-select">EMOTION HEX <span class="caret"></span></div>
-        </div>
-      </div>
-      <div style="margin-top:12px;">
-        <div class="label">Size</div>
-        <div class="fake-slider"></div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h3>Layer 2</h3>
-      <div class="grid2">
-        <div>
-          <div class="label">Particle set</div>
-          <div class="fake-select">SEGMENTS <span class="caret"></span></div>
-        </div>
-        <div>
-          <div class="label">Color</div>
-          <div class="fake-select">AUTO <span class="caret"></span></div>
-        </div>
-      </div>
-      <div style="margin-top:12px;">
-        <div class="label">Size</div>
-        <div class="fake-slider"></div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h3>Layer 3</h3>
-      <div class="grid2">
-        <div>
-          <div class="label">Particle set</div>
-          <div class="fake-select">SPIKES <span class="caret"></span></div>
-        </div>
-        <div>
-          <div class="label">Color</div>
-          <div class="fake-select">ACCENT <span class="caret"></span></div>
-        </div>
-      </div>
-      <div style="margin-top:12px;">
-        <div class="label">Size</div>
-        <div class="fake-slider"></div>
-      </div>
+    <div class="topbar">
+      <div class="tab">STATUS</div>
+      <button class="btn-save" id="btnSaveTop">SAVE</button>
     </div>
 
     <div class="panel">
       <h3>Input</h3>
       <textarea id="input">I love this app but it crashes now. Never again, I'm done.</textarea>
       <div class="actions">
-        <button class="btn" id="btnGen">Generate</button>
-        <button class="btn" id="btnRandom">Randomize</button>
+        <button class="btn" id="btnGen">GENERATE</button>
+        <button class="btn" id="btnRandom">RANDOMIZE</button>
       </div>
-      <div class="note">* UI는 레퍼런스처럼 보이도록 만든 “그래픽 크롬”이며, 실제 컨트롤은 입력/생성/저장만 동작합니다.</div>
+      <div class="note" style="margin-top:10px;">
+        * 컨트롤 UI는 최소화하고, 결과에 대한 <b>상태값(analysis)</b>만 표시합니다.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Analysis</h3>
+      <div class="status">
+        <div class="kv">
+          <div class="k">Sentences</div>
+          <div class="v" id="statSentences">—</div>
+        </div>
+
+        <div class="kv">
+          <div class="k">Overall emotion</div>
+          <div class="v">
+            <span class="chip"><span class="sw" id="swOverall"></span><span id="statOverall">—</span></span>
+          </div>
+        </div>
+
+        <div class="kv">
+          <div class="k">Intensity</div>
+          <div class="v">
+            <div class="meter"><span id="barIntensity"></span></div>
+            <span id="statIntensity">—</span>
+          </div>
+        </div>
+
+        <div class="kv">
+          <div class="k">Switches</div>
+          <div class="v" id="statSwitches">—</div>
+        </div>
+
+        <div class="kv">
+          <div class="k">Used colors</div>
+          <div class="v" id="statColors">—</div>
+        </div>
+      </div>
+
+      <div class="note" style="margin-top:10px;">
+        Switch 규칙: <b>but/however…</b> → broken, <b>now/still…</b> → periodic, <b>delete/done/never again</b> → spike+decay end
+      </div>
     </div>
 
     <div class="panel">
       <h3>Export</h3>
       <div class="actions">
-        <button class="btn" id="btnDownload">Download PNG</button>
-        <button class="btn" id="btnSaveBottom">Save</button>
+        <button class="btn" id="btnDownload">DOWNLOAD PNG</button>
+        <button class="btn" id="btnSaveBottom">SAVE</button>
       </div>
-      <div class="note">PNG로 저장 후 인쇄용 편집툴에서 배치하면 좋아요.</div>
     </div>
   </div>
 
@@ -304,14 +296,25 @@
     extreme_neg:"#020605"
   };
 
+  // label for status panel
+  const LABEL = {
+    basic_pos:"basic positive",
+    strong_pos:"strong positive",
+    attach_pos:"attachment",
+    extreme_pos:"extreme positive",
+    mild_neg:"mild complaint",
+    strong_neg:"strong complaint",
+    extreme_neg:"extreme negative"
+  };
+
   // ===== minimal keyword starter for coloring =====
   const KW = {
     attach_pos:new Set(["love","loved","loving","favorite","favourite","obsessed","addicted"]),
     strong_pos:new Set(["great","amazing","excellent","fantastic"]),
     basic_pos:new Set(["good","nice","helpful","useful","easy","works"]),
-    mild_neg:new Set(["slow","buggy","glitch","glitchy","annoying","crash","crashes","freeze","freezes"]),
-    strong_neg:new Set(["bad","terrible","broken","unacceptable"]),
-    extreme_neg:new Set(["worst","scam","delete","uninstall","done","never","again","fraud"])
+    mild_neg:new Set(["slow","laggy","buggy","glitch","glitchy","annoying","confusing","crash","crashes","freeze","freezes"]),
+    strong_neg:new Set(["bad","terrible","broken","unacceptable","overpriced"]),
+    extreme_neg:new Set(["worst","scam","fraud","trash","junk","delete","uninstall","done","never","again"])
   };
 
   const TRIG = {
@@ -331,7 +334,6 @@
     extreme_neg: 0.22
   };
 
-  // sentence splitting
   function splitSentences(text){
     return (text||"")
       .split(/[\n\r]+|(?<=[.!?])\s+/g)
@@ -381,6 +383,7 @@
   }
 
   function intensityFromTokens(tokens){
+    // 0..10
     const hits = scoreHits(tokens);
     const sumHits = Object.values(hits).reduce((a,b)=>a+b,0);
     const lenBoost = Math.min(3, Math.floor(tokens.length/6));
@@ -405,19 +408,21 @@
     return cur;
   }
 
+  // ===== canvas draw =====
   const canvas = document.getElementById("c");
   const ctx = canvas.getContext("2d");
 
   function clearCanvas(){
-    // transparent so body bg shows through
     ctx.clearRect(0,0,canvas.width,canvas.height);
+    // white background explicitly
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
   }
 
   function yFromPitch(pitch01, yTop, staffH){
     return yTop + (1 - pitch01) * staffH;
   }
 
-  // filled waveform
   function drawWaveFilled(xs, amps, yCenter, colorHex, alpha){
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -432,13 +437,14 @@
     ctx.restore();
   }
 
-  function drawSentenceWave(sentence, yTop, staffH){
+  function drawSentenceWave(sentence, yTop, staffH, usedColors){
     const tokens = tokenize(sentence);
     const tokensLower = tokens.map(t=>t.toLowerCase());
-    if(!tokens.length) return;
+    if(!tokens.length) return { switches: [] };
 
     const overallCat = pickCategory(tokens);
     const overallIntensity = intensityFromTokens(tokens);
+    usedColors.add(overallCat.key);
 
     let pitch = (BASE_PITCH[overallCat.key] ?? 0.52) + randRange(-0.02, 0.02);
     pitch = Math.max(0.06, Math.min(0.94, pitch));
@@ -456,6 +462,8 @@
     let runWeight = 0;
     let xCursor = xStart;
 
+    const switches = [];
+
     function drawRun(runTokensLocal, runW, modeLocal){
       if(!runTokensLocal.length || runW <= 2) return { stop:false };
 
@@ -463,6 +471,7 @@
       const inten = intensityFromTokens(runTokensLocal);
       const ampMax = ampFromIntensity(inten, staffH);
       const alpha = alphaFromIntensity(inten);
+      usedColors.add(cat.key);
 
       const N = Math.max(160, Math.floor(runW/3));
       const xs = new Array(N);
@@ -508,13 +517,14 @@
       const nm = nextMode(tokensLower, i, mode);
 
       if(nm !== mode){
+        switches.push({ at: tokens[i], toMode: nm });
         const runW = usableW * (runWeight / totalW);
         const res = drawRun(runTokens, runW, mode);
         xCursor += runW;
         runTokens = [];
         runWeight = 0;
         mode = nm;
-        if(res.stop) return;
+        if(res.stop) return { switches };
       }
 
       runTokens.push(tokens[i]);
@@ -527,7 +537,7 @@
         }
         const runW = usableW * (runWeight / totalW);
         drawRun(runTokens, runW, mode);
-        return;
+        return { switches };
       }
 
       if(hasNeverAgain(tokensLower,i)) i++;
@@ -535,31 +545,75 @@
 
     const lastW = usableW * (runWeight / totalW);
     drawRun(runTokens, lastW, mode);
+    return { switches };
+  }
+
+  // ===== status UI update =====
+  const statSentences = document.getElementById("statSentences");
+  const statOverall = document.getElementById("statOverall");
+  const swOverall = document.getElementById("swOverall");
+  const barIntensity = document.getElementById("barIntensity");
+  const statIntensity = document.getElementById("statIntensity");
+  const statSwitches = document.getElementById("statSwitches");
+  const statColors = document.getElementById("statColors");
+
+  function renderChips(list){
+    if(!list.length) return "—";
+    return list.map(s => `<span class="chip">${s}</span>`).join(" ");
   }
 
   function draw(text){
     clearCanvas();
     const sentences = splitSentences(text);
 
-    // Stage layout (no lines/labels)
+    // layout on stage (no lines)
     const staffH = 210;
     const gap = 90;
+    const totalH = sentences.length * staffH + (sentences.length-1) * gap;
+    let yTop = (canvas.height - totalH) / 2;
+    if(yTop < 40) yTop = 40;
 
-    // center vertically
-    const totalH = sentences.length * staffH + (sentences.length-1)*gap;
-    let yTop = (canvas.height - totalH)/2;
-    if(yTop < 30) yTop = 30;
+    // overall stats from full text
+    const allTokens = tokenize(sentences.join(" "));
+    const overallCat = pickCategory(allTokens);
+    const overallInt = intensityFromTokens(allTokens);
 
-    for(let s=0;s<sentences.length;s++){
-      drawSentenceWave(sentences[s], yTop, staffH);
+    const usedColors = new Set();
+    const allSwitches = [];
+
+    for(const s of sentences){
+      const out = drawSentenceWave(s, yTop, staffH, usedColors);
+      allSwitches.push(...(out.switches || []));
       yTop += staffH + gap;
     }
+
+    // update status UI
+    statSentences.textContent = String(sentences.length);
+
+    swOverall.style.background = overallCat.hex;
+    statOverall.textContent = `${LABEL[overallCat.key] || overallCat.key} (${overallCat.hex})`;
+
+    const pct = Math.round((overallInt/10)*100);
+    barIntensity.style.width = pct + "%";
+    statIntensity.textContent = `${overallInt.toFixed(1)} / 10`;
+
+    const switchText = allSwitches.slice(0, 8).map(s => {
+      const name = s.toMode===2 ? "broken" : s.toMode===3 ? "periodic" : s.toMode===4 ? "end" : "basic";
+      return `${s.at} → ${name}`;
+    });
+    statSwitches.innerHTML = renderChips(switchText);
+
+    const colorText = [...usedColors].map(k => `<span class="chip"><span class="sw" style="background:${COLORS[k]}"></span>${LABEL[k] || k}</span>`);
+    statColors.innerHTML = colorText.length ? colorText.join(" ") : "—";
   }
 
   // UI handlers
   const inputEl = document.getElementById("input");
   document.getElementById("btnGen").addEventListener("click", () => draw(inputEl.value));
-  document.getElementById("btnRandom").addEventListener("click", () => { seed = Math.floor(Math.random()*1e9); draw(inputEl.value); });
+  document.getElementById("btnRandom").addEventListener("click", () => {
+    seed = Math.floor(Math.random()*1e9);
+    draw(inputEl.value);
+  });
 
   function downloadPNG(){
     const a=document.createElement("a");
@@ -568,8 +622,6 @@
     a.click();
   }
   document.getElementById("btnDownload").addEventListener("click", downloadPNG);
-
-  // "Save" buttons are stylistic; map to download for now
   document.getElementById("btnSaveTop").addEventListener("click", downloadPNG);
   document.getElementById("btnSaveBottom").addEventListener("click", downloadPNG);
 
