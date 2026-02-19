@@ -1,448 +1,216 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Emotion Waveform Generator</title>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
-    .wrap { display: grid; grid-template-columns: 380px 1fr; gap: 16px; align-items: start; }
-    textarea { width: 100%; height: 240px; padding: 10px; font-size: 14px; }
-    button { padding: 10px 12px; font-size: 14px; cursor: pointer; }
-    .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
-    .hint { font-size: 12px; color:#333; line-height: 1.6; margin-top:10px; }
-    canvas { width: 100%; max-width: 1200px; border: 1px solid #ddd; background:#fff; }
-    .legend { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
-    .swatch { display:flex; align-items:center; gap:6px; font-size:12px; }
-    .box { width:14px; height:14px; border:1px solid #0002; }
-    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#f3f3f3; font-size:12px; margin-right:6px;}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Emotion Waveform</title>
+<style>
+  body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    margin: 0;
+    background: #ffffff;
+  }
+
+  .canvas-wrap {
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:40px 20px 20px 20px;
+  }
+
+  canvas {
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  .ui {
+    padding: 20px;
+    border-top: 1px solid #eee;
+  }
+
+  textarea {
+    width: 100%;
+    height: 160px;
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  button {
+    margin-top: 10px;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+</style>
 </head>
 <body>
-  <h1 style="margin:0 0 10px 0;">Emotion → Voice Waveform Generator</h1>
 
-  <div class="wrap">
-    <div>
-      <textarea id="input">I love this app but it crashes now. I paid for premium and still see ads. Never again, I'm done.</textarea>
+<div class="canvas-wrap">
+  <canvas id="c" width="1600" height="700"></canvas>
+</div>
 
-      <div class="row">
-        <button id="btnGen">Generate</button>
-        <button id="btnDownload">Download PNG</button>
-        <button id="btnRandomize">Randomize seed</button>
-      </div>
-
-      <div class="hint">
-        <div><span class="pill">Waveform</span> 한 문장 = 한 파형(좌→우 진행)</div>
-        <div><span class="pill">Color</span> 감정 카테고리(네 HEX)로 채움</div>
-        <div><span class="pill">Pitch</span> 각성도(흥분도) → 라인 위치(위/아래)</div>
-        <div><span class="pill">Volume</span> 강도 → 파형 진폭(두께)</div>
-        <div style="margin-top:8px;">
-          <b>구간 전환</b><br/>
-          • 기본: 안정적인 진폭<br/>
-          • 접속사(but/however/though/although/yet) 이후: 불규칙/찢김<br/>
-          • 시간표현(now/still/again/anymore/since/lately/recently/already) 이후: 주기적 진동<br/>
-          • 단절(delete/uninstall/bye/done/never again) 이후: 큰 스파이크 + 감쇠 후 종료
-        </div>
-      </div>
-
-      <div class="legend" id="legend"></div>
-    </div>
-
-    <div>
-      <canvas id="c" width="1600" height="980"></canvas>
-    </div>
-  </div>
+<div class="ui">
+  <textarea id="input">I love this app but it crashes now. Never again, I'm done.</textarea>
+  <br/>
+  <button onclick="generate()">Generate</button>
+  <button onclick="downloadPNG()">Download PNG</button>
+</div>
 
 <script>
-(() => {
-  // =========================
-  // 1) USER COLOR PALETTE (fixed)
-  // =========================
-  const COLORS = {
-    basic_pos:   "#00FF90", // 기본 긍정
-    strong_pos:  "#DFFF29", // 강화 긍정
-    attach_pos:  "#FF6134", // 감정 애착
-    extreme_pos: "#F7399D", // 극단 긍정
-    mild_neg:    "#00FFFF", // 약한 불만
-    strong_neg:  "#006AA0", // 강한 불만
-    extreme_neg: "#020605", // 극단 부정
-  };
+const COLORS = {
+  basic_pos:"#00FF90",
+  strong_pos:"#DFFF29",
+  attach_pos:"#FF6134",
+  extreme_pos:"#F7399D",
+  mild_neg:"#00FFFF",
+  strong_neg:"#006AA0",
+  extreme_neg:"#020605"
+};
 
-  // legend
-  const legendEl = document.getElementById("legend");
-  [
-    ["기본 긍정", COLORS.basic_pos],
-    ["강화 긍정", COLORS.strong_pos],
-    ["감정 애착", COLORS.attach_pos],
-    ["극단 긍정", COLORS.extreme_pos],
-    ["약한 불만", COLORS.mild_neg],
-    ["강한 불만", COLORS.strong_neg],
-    ["극단 부정", COLORS.extreme_neg],
-  ].forEach(([name, hex]) => {
-    const d = document.createElement("div");
-    d.className = "swatch";
-    d.innerHTML = `<span class="box" style="background:${hex}"></span>${name} (${hex})`;
-    legendEl.appendChild(d);
-  });
+const KW = {
+  attach_pos:new Set(["love","favorite","obsessed"]),
+  strong_pos:new Set(["great","amazing","fantastic"]),
+  basic_pos:new Set(["good","nice","helpful"]),
+  mild_neg:new Set(["slow","buggy","annoying","crash","crashes"]),
+  strong_neg:new Set(["bad","terrible","broken"]),
+  extreme_neg:new Set(["worst","scam","delete","done","never","again"])
+};
 
-  // =========================
-  // 2) KEYWORDS for COLOR CLASSIFICATION (starter)
-  // =========================
-  const KW = {
-    basic_pos: new Set(["good","nice","helpful","useful","easy","simple","convenient","cool","fun","works","reliable","smooth","accurate","decent","fine","okay"]),
-    strong_pos: new Set(["great","excellent","fantastic","wonderful","impressed","powerful","brilliant","outstanding","productive","valuable","amazing"]),
-    attach_pos: new Set(["love","loved","loving","favorite","favourite","obsessed","addicted","bestie","sister","everything","blessing","grateful","indispensable"]),
-    extreme_pos: new Set(["best","perfect","10/10","five","stars","must-have","life-changing","beyond","mind","blowing","goat"]),
+const canvas=document.getElementById("c");
+const ctx=canvas.getContext("2d");
 
-    mild_neg: new Set(["slow","laggy","buggy","glitchy","glitch","annoying","confusing","frustrating","limited","not","working","issue","problem","crash","crashes","freeze","freezes","stutter","stutters"]),
-    strong_neg: new Set(["bad","terrible","horrible","ridiculous","unacceptable","useless","waste","misleading","unfair","overpriced","greedy","broken"]),
-    extreme_neg: new Set(["worst","scam","scammers","fraud","toxic","disgusting","trash","junk","poison","delete","uninstall","bye","done","never","again"]),
-  };
+let seed=1234;
+function rand(){
+  seed=(seed*1664525+1013904223)%4294967296;
+  return seed/4294967296;
+}
 
-  // =========================
-  // 3) TRIGGERS for waveform behavior switches
-  // =========================
-  const TRIG = {
-    contrast: new Set(["but","however","though","although","yet"]),
-    time: new Set(["now","still","again","anymore","since","lately","recently","today","yesterday","already"]),
-    break: new Set(["delete","uninstall","bye","done"]),
-  };
-
-  // =========================
-  // 4) PITCH MAP (0..1), higher => closer to top
-  // =========================
-  const BASE_PITCH = {
-    basic_pos: 0.40,
-    strong_pos: 0.55,
-    attach_pos: 0.68,
-    extreme_pos: 0.86,
-    mild_neg: 0.34,
-    strong_neg: 0.58,
-    extreme_neg: 0.18, // extreme negative -> "low rumble" (원하면 0.90로 바꿔 '비명'으로)
-  };
-
-  // =========================
-  // 5) SPLIT + TOKENIZE
-  // =========================
-  function splitSentences(text) {
-    return (text || "")
-      .split(/[\n\r]+|(?<=[.!?])\s+/g)
-      .map(s => s.trim())
-      .filter(Boolean);
-  }
-
-  function tokenize(sentence) {
-    return sentence.trim().split(/\s+/g)
-      .map(t => t.replace(/[^\w'\/-]/g, ""))
-      .filter(Boolean);
-  }
-
-  function hasNeverAgain(tokensLower, i) {
-    return (tokensLower[i] === "never" && tokensLower[i+1] === "again");
-  }
-
-  // =========================
-  // 6) RNG
-  // =========================
-  let seed = 1234567;
-  function rand() {
-    seed = (seed * 1664525 + 1013904223) % 4294967296;
-    return seed / 4294967296;
-  }
-  function randRange(a,b){ return a + (b-a)*rand(); }
-
-  // =========================
-  // 7) CATEGORY + INTENSITY
-  // =========================
-  function scoreHits(tokens) {
-    const hits = {
-      basic_pos: 0, strong_pos: 0, attach_pos: 0, extreme_pos: 0,
-      mild_neg: 0, strong_neg: 0, extreme_neg: 0,
-    };
-    for (const raw of tokens) {
-      const t = raw.toLowerCase();
-      for (const k in KW) if (KW[k].has(t)) hits[k] += 1;
-      if (t === "10/10") hits.extreme_pos += 2;
-    }
-    return hits;
-  }
-
-  function pickCategory(tokens) {
-    const hits = scoreHits(tokens);
-    let bestK = "basic_pos", bestV = -1;
-    for (const k in hits) {
-      if (hits[k] > bestV) { bestV = hits[k]; bestK = k; }
-    }
-    if (bestV <= 0) return { key:"basic_pos", hex: COLORS.basic_pos, hitCount: 0 };
-    return { key: bestK, hex: COLORS[bestK], hitCount: bestV };
-  }
-
-  function intensityFromTokens(tokens) {
-    // 0..10
-    const hits = scoreHits(tokens);
-    const sumHits = Object.values(hits).reduce((a,b)=>a+b,0);
-    const lenBoost = Math.min(3, Math.floor(tokens.length / 6));
-    const base = sumHits * 2 + lenBoost;
-    return Math.max(0, Math.min(10, base));
-  }
-
-  // volume mapping
-  function ampFromIntensity(intensity, staffH) {
-    // waveform amplitude (px)
-    return 6 + (intensity/10) * (staffH * 0.33); // 6..~40
-  }
-
-  function alphaFromIntensity(intensity) {
-    return Math.min(0.95, 0.20 + (intensity/10) * 0.75);
-  }
-
-  // =========================
-  // 8) WAVEFORM MODE SWITCHING (Type-like)
-  // =========================
-  // mode: 1 basic, 2 broken/noisy, 3 periodic, 4 spike+decay end
-  function nextMode(tokensLower, i, curMode) {
-    if (hasNeverAgain(tokensLower, i)) return 4;
-    const t = tokensLower[i];
-    if (TRIG.break.has(t)) return 4;
-    if (TRIG.time.has(t)) return 3;
-    if (TRIG.contrast.has(t)) return 2;
-    return curMode;
-  }
-
-  // =========================
-  // 9) DRAW
-  // =========================
-  const canvas = document.getElementById("c");
-  const ctx = canvas.getContext("2d");
-
-  function clearCanvas() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-  }
-
-  function drawStaff(yTop, staffH, lines=3) {
-    ctx.save();
-    ctx.strokeStyle = "rgba(0,0,0,0.15)";
-    ctx.lineWidth = 1;
-    for (let i=0; i<=lines; i++) {
-      const y = yTop + (staffH * i/lines);
-      ctx.beginPath();
-      ctx.moveTo(50, y);
-      ctx.lineTo(canvas.width - 50, y);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  function yFromPitch(pitch01, yTop, staffH) {
-    return yTop + (1 - pitch01) * staffH;
-  }
-
-  // Draw filled waveform (upper+lower)
-  function drawWaveFilled(pointsX, pointsAmp, yCenter, colorHex, alpha) {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = colorHex;
-
-    // upper
-    ctx.beginPath();
-    ctx.moveTo(pointsX[0], yCenter - pointsAmp[0]);
-    for (let i=1; i<pointsX.length; i++) {
-      ctx.lineTo(pointsX[i], yCenter - pointsAmp[i]);
-    }
-    // lower (reverse)
-    for (let i=pointsX.length-1; i>=0; i--) {
-      ctx.lineTo(pointsX[i], yCenter + pointsAmp[i]);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function drawSentenceWave(sentence, yTop, staffH) {
-    const tokens = tokenize(sentence);
-    const tokensLower = tokens.map(t => t.toLowerCase());
-    if (!tokens.length) return;
-
-    // overall color/pitch based on whole sentence
-    const overallCat = pickCategory(tokens);
-    const overallIntensity = intensityFromTokens(tokens);
-    const baseAmp = ampFromIntensity(overallIntensity, staffH);
-    const baseAlpha = alphaFromIntensity(overallIntensity);
-
-    let pitch = (BASE_PITCH[overallCat.key] ?? 0.5) + randRange(-0.03, 0.03);
-    pitch = Math.max(0.05, Math.min(0.95, pitch));
-    const yCenter = yFromPitch(pitch, yTop, staffH);
-
-    // x mapping: token weights to time width
-    const xStart = 70;
-    const xEnd = canvas.width - 70;
-    const usableW = xEnd - xStart;
-
-    const weights = tokens.map(t => Math.max(1.0, Math.min(10, t.length / 3)));
-    const totalW = weights.reduce((a,b)=>a+b,0);
-
-    // We'll build runs by mode switching and draw each run as a waveform segment.
-    let mode = 1;
-    let runTokens = [];
-    let runWeight = 0;
-    let xCursor = xStart;
-
-    function drawRun(runTokensLocal, runW, modeLocal) {
-      if (!runTokensLocal.length || runW <= 2) return { stop:false };
-
-      const cat = pickCategory(runTokensLocal);
-      const inten = intensityFromTokens(runTokensLocal);
-      const ampMax = ampFromIntensity(inten, staffH);
-      const alpha = alphaFromIntensity(inten);
-
-      // mode modifies waveform character
-      // 1 basic: smooth-ish random small fluctuations
-      // 2 broken: noisy + intermittent gaps
-      // 3 periodic: sine-like vibration
-      // 4 spike: single spike + decay (and stop)
-      const N = Math.max(120, Math.floor(runW / 4)); // resolution
-
-      const xs = new Array(N);
-      const amps = new Array(N);
-
-      for (let i=0; i<N; i++) {
-        const t = i / (N-1);
-        xs[i] = xCursor + t * runW;
-
-        if (modeLocal === 1) {
-          const noise = (rand() - 0.5) * 0.55;
-          const env = 0.55 + 0.45 * Math.sin(t * Math.PI); // gentle envelope
-          amps[i] = Math.max(0, ampMax * env * (0.55 + noise));
-
-        } else if (modeLocal === 2) {
-          // broken/noisy: higher jitter, plus random dropouts
-          const dropout = (rand() < 0.06) ? 0.0 : 1.0; // occasional silence gaps
-          const noise = (rand() - 0.5) * 1.3;
-          const env = 0.35 + 0.65 * Math.sin(t * Math.PI);
-          amps[i] = Math.max(0, ampMax * env * Math.max(0, 0.65 + noise) * dropout);
-
-        } else if (modeLocal === 3) {
-          // periodic: vibrato-like
-          const freq = randRange(10, 18); // cycles
-          const vib = 0.6 + 0.4 * Math.sin(2 * Math.PI * freq * t);
-          const env = 0.45 + 0.55 * Math.sin(t * Math.PI);
-          amps[i] = Math.max(0, ampMax * env * vib);
-
-        } else if (modeLocal === 4) {
-          // spike + decay
-          const spikePos = 0.18 + randRange(-0.05, 0.05);
-          const decay = Math.exp(-6.0 * Math.max(0, t - spikePos));
-          const spike = Math.exp(-((t - spikePos) * (t - spikePos)) / (2 * 0.0015));
-          const a = (0.25 * ampMax) + (2.2 * ampMax * spike) + (0.9 * ampMax * decay);
-          amps[i] = Math.max(0, a);
-        }
+function pickCategory(tokens){
+  let best="basic_pos",score=0;
+  for(const t of tokens){
+    const w=t.toLowerCase();
+    for(const k in KW){
+      if(KW[k].has(w)){
+        score++;
+        best=k;
       }
-
-      drawWaveFilled(xs, amps, yCenter, cat.hex, alpha);
-
-      if (modeLocal === 4) return { stop:true };
-      return { stop:false };
-    }
-
-    for (let i=0; i<tokens.length; i++) {
-      const w = weights[i];
-      const nm = nextMode(tokensLower, i, mode);
-
-      if (nm !== mode) {
-        // flush current run
-        const runW = usableW * (runWeight / totalW);
-        const res = drawRun(runTokens, runW, mode);
-        xCursor += runW;
-        runTokens = [];
-        runWeight = 0;
-        mode = nm;
-        if (res.stop) return;
-      }
-
-      runTokens.push(tokens[i]);
-      runWeight += w;
-
-      // if we are now in mode 4, flush immediately and stop
-      if (mode === 4) {
-        // include "again" if it was "never again"
-        if (hasNeverAgain(tokensLower, i) && i+1 < tokens.length) {
-          runTokens.push(tokens[i+1]);
-          runWeight += weights[i+1];
-        }
-        const runW = usableW * (runWeight / totalW);
-        drawRun(runTokens, runW, mode);
-        return;
-      }
-
-      // skip second of never again
-      if (hasNeverAgain(tokensLower, i)) i++;
-    }
-
-    // flush last
-    const lastW = usableW * (runWeight / totalW);
-    drawRun(runTokens, lastW, mode);
-  }
-
-  function draw(text) {
-    clearCanvas();
-
-    // Header
-    ctx.save();
-    ctx.fillStyle = "rgba(0,0,0,0.85)";
-    ctx.font = "600 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-    ctx.fillText("Emotion Waveform", 70, 54);
-    ctx.restore();
-
-    // labels (once)
-    ctx.save();
-    ctx.fillStyle = "rgba(0,0,0,0.55)";
-    ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-    ctx.fillText("highest tone", 70, 92);
-    ctx.restore();
-
-    const sentences = splitSentences(text);
-    const marginTop = 110;
-    const gap = 40;
-    const staffH = 130;
-
-    let y = marginTop;
-
-    for (let s=0; s<sentences.length; s++) {
-      if (y + staffH > canvas.height - 60) break;
-      drawStaff(y, staffH, 3);
-
-      // lowest label per staff (optional; comment out if you want only once)
-      ctx.save();
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
-      ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      ctx.fillText("lowest tone", 70, y + staffH + 16);
-      ctx.restore();
-
-      drawSentenceWave(sentences[s], y, staffH);
-      y += staffH + gap;
     }
   }
+  return best;
+}
 
-  // UI
-  const inputEl = document.getElementById("input");
-  document.getElementById("btnGen").addEventListener("click", () => draw(inputEl.value));
+function intensity(tokens){
+  return Math.min(10,tokens.length/2);
+}
 
-  document.getElementById("btnDownload").addEventListener("click", () => {
-    const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/png");
-    a.download = "emotion-waveform.png";
-    a.click();
-  });
+function generate(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  document.getElementById("btnRandomize").addEventListener("click", () => {
-    seed = Math.floor(Math.random() * 1e9);
-    draw(inputEl.value);
-  });
+  const text=document.getElementById("input").value;
+  const sentences=text.split(/[.!?]/).map(s=>s.trim()).filter(Boolean);
 
-  draw(inputEl.value);
-})();
+  const marginX=100;
+  const usableW=canvas.width-marginX*2;
+  const lineHeight=200;
+  let y=canvas.height/2 - (sentences.length-1)*lineHeight/2;
+
+  for(const sentence of sentences){
+    const tokens=sentence.split(/\s+/);
+    const cat=pickCategory(tokens);
+    const color=COLORS[cat];
+    const ampMax=20 + intensity(tokens)*4;
+
+    drawWave(sentence,y,usableW,marginX,color,ampMax);
+    y+=lineHeight;
+  }
+}
+
+function drawWave(sentence,yCenter,width,xStart,color,ampMax){
+  const tokens=sentence.split(/\s+/);
+  const total=tokens.length;
+
+  let x=xStart;
+
+  ctx.save();
+  ctx.fillStyle=color;
+  ctx.globalAlpha=0.8;
+
+  const resolution=500;
+  const step=width/resolution;
+
+  let mode=1;
+
+  ctx.beginPath();
+
+  for(let i=0;i<=resolution;i++){
+    const t=i/resolution;
+    const currentIndex=Math.floor(t*total);
+    const word=tokens[currentIndex]||"";
+
+    if(word.toLowerCase()==="but") mode=2;
+    if(word.toLowerCase()==="now") mode=3;
+    if(word.toLowerCase()==="done"||word.toLowerCase()==="delete") mode=4;
+
+    let amp=0;
+
+    if(mode===1){
+      amp=ampMax*(0.5+0.5*Math.sin(t*Math.PI))* (0.5+rand());
+    }
+    if(mode===2){
+      amp=ampMax*(rand()*1.2);
+    }
+    if(mode===3){
+      amp=ampMax*(0.6+0.4*Math.sin(40*t));
+    }
+    if(mode===4){
+      amp=ampMax*2*Math.exp(-8*(t));
+    }
+
+    const xPos=xStart+i*step;
+    const yPos=yCenter-amp;
+
+    if(i===0) ctx.moveTo(xPos,yPos);
+    else ctx.lineTo(xPos,yPos);
+  }
+
+  for(let i=resolution;i>=0;i--){
+    const t=i/resolution;
+    const currentIndex=Math.floor(t*total);
+    const word=tokens[currentIndex]||"";
+
+    let amp=0;
+
+    if(mode===1){
+      amp=ampMax*(0.5+0.5*Math.sin(t*Math.PI))* (0.5+rand());
+    }
+    if(mode===2){
+      amp=ampMax*(rand()*1.2);
+    }
+    if(mode===3){
+      amp=ampMax*(0.6+0.4*Math.sin(40*t));
+    }
+    if(mode===4){
+      amp=ampMax*2*Math.exp(-8*(t));
+    }
+
+    const xPos=xStart+i*step;
+    const yPos=yCenter+amp;
+    ctx.lineTo(xPos,yPos);
+  }
+
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function downloadPNG(){
+  const a=document.createElement("a");
+  a.href=canvas.toDataURL("image/png");
+  a.download="emotion-wave.png";
+  a.click();
+}
+
+generate();
 </script>
 </body>
 </html>
