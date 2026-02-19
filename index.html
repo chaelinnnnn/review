@@ -3,10 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Emotion Waveform</title>
+<title>Visual Cues Waveform (B/W + Outlier Mark)</title>
 <style>
   :root{
-    /* WHITE UI SYSTEM */
     --bg:#ffffff;
     --panel:#ffffff;
     --panel2:#f6f6f6;
@@ -14,206 +13,54 @@
     --muted:rgba(0,0,0,.55);
     --line:rgba(0,0,0,.14);
     --shadow:rgba(0,0,0,.06);
-
-    /* Accent (matches your extreme_pos) */
-    --accent:#F7399D;
+    --accent:#F7399D; /* default mark color */
   }
-
   *{ box-sizing:border-box; }
-  body{
-    margin:0;
-    background:var(--bg);
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    color:var(--ink);
-  }
-
-  .app{
-    display:grid;
-    grid-template-columns: 420px 1fr;
-    min-height:100vh;
-    gap:24px;
-    padding:28px;
-  }
-
-  /* Left column */
-  .ui{
-    position:sticky;
-    top:20px;
-    align-self:start;
-  }
-
-  .topbar{
-    display:flex;
-    gap:10px;
-    align-items:center;
-    margin-bottom:14px;
-  }
-
-  .tab{
+  body{ margin:0; background:var(--bg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; color:var(--ink); }
+  .app{ display:grid; grid-template-columns:420px 1fr; min-height:100vh; gap:24px; padding:28px; }
+  .ui{ position:sticky; top:20px; align-self:start; }
+  .topbar{ display:flex; gap:10px; align-items:center; margin-bottom:14px; }
+  .tab,.btn-save{
     background:var(--panel);
     border:1px solid var(--line);
     padding:12px 16px;
     font-size:12px;
     letter-spacing:.10em;
     text-transform:uppercase;
-    box-shadow: 0 1px 0 var(--shadow);
+    box-shadow:0 1px 0 var(--shadow);
     user-select:none;
   }
-
-  .btn-save{
-    margin-left:auto;
-    background:var(--panel);
-    border:1px solid var(--line);
-    padding:12px 16px;
-    font-size:12px;
-    letter-spacing:.10em;
-    text-transform:uppercase;
-    cursor:pointer;
-    box-shadow: 0 1px 0 var(--shadow);
-  }
+  .btn-save{ margin-left:auto; cursor:pointer; }
   .btn-save:hover{ background:var(--panel2); }
-
-  .panel{
-    background:var(--panel);
-    border:1px solid var(--line);
-    box-shadow: 0 2px 0 var(--shadow);
-    padding:14px;
-    margin-bottom:16px;
-  }
-
-  .panel h3{
-    margin:0 0 10px 0;
-    font-size:12px;
-    letter-spacing:.10em;
-    text-transform:uppercase;
-    color:var(--muted);
-  }
-
-  textarea{
-    width:100%;
-    height:140px;
-    resize:none;
-    padding:10px;
-    font-size:13px;
-    line-height:1.45;
-    color:var(--ink);
-    background:var(--panel2);
-    border:1px solid var(--line);
-    outline:none;
-  }
-
-  .actions{
-    display:flex;
-    gap:10px;
-    margin-top:10px;
-  }
-
-  .btn{
-    flex:1;
-    background:var(--panel);
-    border:1px solid var(--line);
-    padding:12px 12px;
-    font-size:12px;
-    letter-spacing:.10em;
-    text-transform:uppercase;
-    cursor:pointer;
-    box-shadow: 0 1px 0 var(--shadow);
-  }
+  .panel{ background:var(--panel); border:1px solid var(--line); box-shadow:0 2px 0 var(--shadow); padding:14px; margin-bottom:16px; }
+  .panel h3{ margin:0 0 10px 0; font-size:12px; letter-spacing:.10em; text-transform:uppercase; color:var(--muted); }
+  textarea{ width:100%; height:140px; resize:none; padding:10px; font-size:13px; line-height:1.45; color:var(--ink); background:var(--panel2); border:1px solid var(--line); outline:none; }
+  .actions{ display:flex; gap:10px; margin-top:10px; }
+  .btn{ flex:1; background:var(--panel); border:1px solid var(--line); padding:12px; font-size:12px; letter-spacing:.10em; text-transform:uppercase; cursor:pointer; box-shadow:0 1px 0 var(--shadow); }
   .btn:hover{ background:var(--panel2); }
 
-  /* Status panel */
-  .status{
-    display:grid;
-    grid-template-columns: 1fr;
-    gap:10px;
-  }
+  .status{ display:grid; gap:10px; }
+  .kv{ display:grid; grid-template-columns:120px 1fr; gap:10px; padding:10px; border:1px solid var(--line); background:var(--panel); }
+  .k{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  .v{ font-size:12px; color:var(--ink); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 
-  .kv{
-    display:grid;
-    grid-template-columns: 120px 1fr;
-    gap:10px;
-    padding:10px;
-    border:1px solid var(--line);
-    background:var(--panel);
-  }
-  .k{
-    font-size:11px;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    color:var(--muted);
-  }
-  .v{
-    font-size:12px;
-    color:var(--ink);
-    display:flex;
-    align-items:center;
-    gap:10px;
-    flex-wrap:wrap;
-  }
+  .chip{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid var(--line); background:var(--panel); font-size:12px; }
+  .dot{ width:10px; height:10px; border-radius:999px; background:var(--accent); border:1px solid rgba(0,0,0,.12); }
+  .meter{ height:8px; width:180px; border:1px solid var(--line); background:var(--panel2); position:relative; border-radius:2px; overflow:hidden; }
+  .meter>span{ position:absolute; left:0; top:0; bottom:0; width:0%; background:var(--ink); }
+  .note{ font-size:12px; color:var(--muted); line-height:1.5; }
 
-  .chip{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:6px 10px;
-    border:1px solid var(--line);
-    background:var(--panel);
-    font-size:12px;
-  }
-  .sw{
-    width:12px;
-    height:12px;
-    border:1px solid rgba(0,0,0,.12);
-  }
+  .stage{ display:flex; align-items:center; justify-content:center; padding:18px 0; }
+  canvas{ width:100%; max-width:1400px; background:#fff; }
 
-  .meter{
-    height:8px;
-    width:180px;
-    border:1px solid var(--line);
-    background:var(--panel2);
-    position:relative;
-    border-radius:2px;
-    overflow:hidden;
-  }
-  .meter > span{
-    position:absolute;
-    left:0; top:0; bottom:0;
-    width:0%;
-    background:var(--accent);
-  }
-
-  .note{
-    font-size:12px;
-    color:var(--muted);
-    line-height:1.5;
-  }
-
-  /* Right stage */
-  .stage{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:18px 0;
-  }
-  canvas{
-    width:100%;
-    max-width:1400px;
-    background:transparent;
-  }
-
-  @media (max-width: 980px){
-    .app{ grid-template-columns: 1fr; }
-    .ui{ position:relative; top:auto; }
-  }
+  @media (max-width:980px){ .app{ grid-template-columns:1fr; } .ui{ position:relative; top:auto; } }
 </style>
 </head>
 <body>
-
 <div class="app">
-  <!-- LEFT UI -->
   <div class="ui">
     <div class="topbar">
-      <div class="tab">STATUS</div>
+      <div class="tab">VISUAL CUES</div>
       <button class="btn-save" id="btnSaveTop">SAVE</button>
     </div>
 
@@ -225,46 +72,19 @@
         <button class="btn" id="btnRandom">RANDOMIZE</button>
       </div>
       <div class="note" style="margin-top:10px;">
-        * 컨트롤 UI는 최소화하고, 결과에 대한 <b>상태값(analysis)</b>만 표시합니다.
+        * 색으로 감정을 직접 칠하지 않고, <b>패턴(증가/감소/혼합/이상치)</b>로 “감정-목소리”를 표현합니다.<br/>
+        * 컬러는 <b>Outlier 마크(점)</b>에만 사용합니다.
       </div>
     </div>
 
     <div class="panel">
-      <h3>Analysis</h3>
+      <h3>Status</h3>
       <div class="status">
-        <div class="kv">
-          <div class="k">Sentences</div>
-          <div class="v" id="statSentences">—</div>
-        </div>
-
-        <div class="kv">
-          <div class="k">Overall emotion</div>
-          <div class="v">
-            <span class="chip"><span class="sw" id="swOverall"></span><span id="statOverall">—</span></span>
-          </div>
-        </div>
-
-        <div class="kv">
-          <div class="k">Intensity</div>
-          <div class="v">
-            <div class="meter"><span id="barIntensity"></span></div>
-            <span id="statIntensity">—</span>
-          </div>
-        </div>
-
-        <div class="kv">
-          <div class="k">Switches</div>
-          <div class="v" id="statSwitches">—</div>
-        </div>
-
-        <div class="kv">
-          <div class="k">Used colors</div>
-          <div class="v" id="statColors">—</div>
-        </div>
-      </div>
-
-      <div class="note" style="margin-top:10px;">
-        Switch 규칙: <b>but/however…</b> → broken, <b>now/still…</b> → periodic, <b>delete/done/never again</b> → spike+decay end
+        <div class="kv"><div class="k">Sentences</div><div class="v" id="statSentences">—</div></div>
+        <div class="kv"><div class="k">Pattern</div><div class="v" id="statPattern">—</div></div>
+        <div class="kv"><div class="k">Tone position</div><div class="v"><div class="meter"><span id="barPos"></span></div><span id="statPos">—</span></div></div>
+        <div class="kv"><div class="k">Intensity</div><div class="v"><div class="meter"><span id="barIntensity"></span></div><span id="statIntensity">—</span></div></div>
+        <div class="kv"><div class="k">Outliers</div><div class="v" id="statOutliers">—</div></div>
       </div>
     </div>
 
@@ -277,7 +97,6 @@
     </div>
   </div>
 
-  <!-- RIGHT STAGE -->
   <div class="stage">
     <canvas id="c" width="1800" height="900"></canvas>
   </div>
@@ -285,8 +104,10 @@
 
 <script>
 (() => {
-  // ===== palette (your hex) =====
-  const COLORS = {
+  // =========================
+  // Accent colors (used only for outlier marks)
+  // =========================
+  const EMO_COLORS = {
     basic_pos:"#00FF90",
     strong_pos:"#DFFF29",
     attach_pos:"#FF6134",
@@ -296,44 +117,26 @@
     extreme_neg:"#020605"
   };
 
-  // label for status panel
-  const LABEL = {
-    basic_pos:"basic positive",
-    strong_pos:"strong positive",
-    attach_pos:"attachment",
-    extreme_pos:"extreme positive",
-    mild_neg:"mild complaint",
-    strong_neg:"strong complaint",
-    extreme_neg:"extreme negative"
+  // =========================
+  // Keyword sets for (a) polarity trend (b) outliers (c) switches
+  // =========================
+  const POS_WORDS = new Set(["good","nice","helpful","useful","easy","simple","convenient","cool","fun","works","reliable","smooth","accurate","decent","fine","okay","great","excellent","fantastic","wonderful","amazing","love","loved","loving","favorite","favourite","best","perfect","10/10","stars"]);
+  const NEG_WORDS = new Set(["slow","laggy","buggy","glitch","glitchy","annoying","confusing","frustrating","limited","problem","issue","crash","crashes","freeze","freezes","bad","terrible","horrible","ridiculous","unacceptable","useless","waste","broken","worst","scam","fraud","trash","junk"]);
+
+  const OUTLIER_WORDS = new Set(["never","again","worst","scam","fraud","trash","junk","delete","uninstall","done","perfect","best","life-changing"]);
+  const CONTRAST = new Set(["but","however","though","although","yet"]);
+  const TIME = new Set(["now","still","again","anymore","since","lately","recently","already","today","yesterday"]);
+
+  // optional: outlier mark color chosen by "local emotion"
+  const OUTLIER_COLOR_HINT = {
+    pos: "extreme_pos",
+    neg: "extreme_neg",
+    neutral: "extreme_pos"
   };
 
-  // ===== minimal keyword starter for coloring =====
-  const KW = {
-    attach_pos:new Set(["love","loved","loving","favorite","favourite","obsessed","addicted"]),
-    strong_pos:new Set(["great","amazing","excellent","fantastic"]),
-    basic_pos:new Set(["good","nice","helpful","useful","easy","works"]),
-    mild_neg:new Set(["slow","laggy","buggy","glitch","glitchy","annoying","confusing","crash","crashes","freeze","freezes"]),
-    strong_neg:new Set(["bad","terrible","broken","unacceptable","overpriced"]),
-    extreme_neg:new Set(["worst","scam","fraud","trash","junk","delete","uninstall","done","never","again"])
-  };
-
-  const TRIG = {
-    contrast: new Set(["but","however","though","although","yet"]),
-    time: new Set(["now","still","again","anymore","since","lately","recently","already"]),
-    break: new Set(["delete","uninstall","bye","done"]),
-  };
-
-  // pitch (0..1) higher -> upper
-  const BASE_PITCH = {
-    basic_pos: 0.44,
-    strong_pos: 0.58,
-    attach_pos: 0.70,
-    extreme_pos: 0.86,
-    mild_neg: 0.36,
-    strong_neg: 0.55,
-    extreme_neg: 0.22
-  };
-
+  // =========================
+  // Text utils
+  // =========================
   function splitSentences(text){
     return (text||"")
       .split(/[\n\r]+|(?<=[.!?])\s+/g)
@@ -345,287 +148,377 @@
       .map(t=>t.replace(/[^\w'\/-]/g,""))
       .filter(Boolean);
   }
-  function hasNeverAgain(tokensLower,i){
-    return tokensLower[i]==="never" && tokensLower[i+1]==="again";
-  }
 
-  // RNG
+  // =========================
+  // RNG (deterministic if seed fixed)
+  // =========================
   let seed = 1234567;
-  function rand(){
-    seed = (seed*1664525 + 1013904223) % 4294967296;
-    return seed/4294967296;
-  }
+  function rand(){ seed = (seed*1664525 + 1013904223) % 4294967296; return seed/4294967296; }
   function randRange(a,b){ return a + (b-a)*rand(); }
+  function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
 
-  function scoreHits(tokens){
-    const hits = {
-      basic_pos:0,strong_pos:0,attach_pos:0,extreme_pos:0,
-      mild_neg:0,strong_neg:0,extreme_neg:0
-    };
-    for(const raw of tokens){
-      const t = raw.toLowerCase();
-      for(const k in KW){
-        if(KW[k].has(t)) hits[k] += 1;
+  // =========================
+  // Signal design:
+  // - We classify each sentence into Pattern:
+  //   Increase / Decrease / Combination / Outlier
+  // - Then generate a continuous waveform where:
+  //   Position = tone baseline (yCenter)
+  //   Length = overall intensity & density
+  //   Angle = trend direction (increase/decrease)
+  // =========================
+
+  function analyzeSentence(sentence){
+    const tokens = tokenize(sentence);
+    const lower = tokens.map(t=>t.toLowerCase());
+
+    // compute per-token "sentiment score"
+    const s = lower.map(w => (POS_WORDS.has(w)? 1 : 0) + (NEG_WORDS.has(w)? -1 : 0));
+
+    // total + trend
+    const total = s.reduce((a,b)=>a+b,0);
+    const half = Math.floor(s.length/2) || 1;
+    const first = s.slice(0,half).reduce((a,b)=>a+b,0);
+    const second = s.slice(half).reduce((a,b)=>a+b,0);
+    const trend = second - first; // + => more positive later, - => more negative later
+
+    // switches
+    const hasContrast = lower.some(w=>CONTRAST.has(w));
+    const hasTime = lower.some(w=>TIME.has(w));
+
+    // outliers positions
+    const outliers = [];
+    for(let i=0;i<lower.length;i++){
+      const w = lower[i];
+      if(OUTLIER_WORDS.has(w)){
+        // special bigram never again
+        if(w==="never" && lower[i+1]==="again"){
+          outliers.push({ index:i, token:"never again" });
+          i++;
+        }else{
+          outliers.push({ index:i, token:w });
+        }
       }
-      if(t==="10/10") hits.extreme_pos += 2;
     }
-    return hits;
+
+    // pattern classification
+    let pattern = "COMBINATION";
+    if(outliers.length) pattern = "OUTLIER";
+    else if(hasContrast || (trend !== 0 && (first*second < 0))) pattern = "COMBINATION";
+    else if(trend > 0 || total > 0) pattern = "INCREASE";
+    else if(trend < 0 || total < 0) pattern = "DECREASE";
+    else pattern = "COMBINATION";
+
+    // intensity 0..10 (length cue)
+    const hitCount = lower.filter(w => POS_WORDS.has(w) || NEG_WORDS.has(w) || OUTLIER_WORDS.has(w)).length;
+    const intensity = clamp((hitCount * 1.6) + Math.min(3, tokens.length/7), 0, 10);
+
+    // tone position 0..1 (position cue): higher if more aroused (outlier/contrast/time), lower if flat
+    let pos = 0.55;
+    if(pattern==="OUTLIER") pos = 0.70;
+    if(pattern==="DECREASE") pos = 0.45;
+    if(pattern==="INCREASE") pos = 0.60;
+    if(pattern==="COMBINATION") pos = 0.52;
+    // add arousal hints
+    if(hasContrast) pos += 0.05;
+    if(hasTime) pos += 0.03;
+    pos = clamp(pos + randRange(-0.03, 0.03), 0.15, 0.90);
+
+    // angle cue: trend in [-1..1]
+    const angle = clamp(trend / Math.max(1, Math.abs(total)+2), -1, 1);
+
+    // mark color hint (only for outlier dots)
+    let outlierMood = "neutral";
+    if(total > 0) outlierMood = "pos";
+    if(total < 0) outlierMood = "neg";
+    const outlierColorKey = OUTLIER_COLOR_HINT[outlierMood];
+
+    return { tokens, lower, s, total, trend, intensity, pos, angle, pattern, outliers, hasContrast, hasTime, outlierColorKey };
   }
 
-  function pickCategory(tokens){
-    const hits = scoreHits(tokens);
-    let best="basic_pos", bestV=-1;
-    for(const k in hits){
-      if(hits[k] > bestV){ bestV = hits[k]; best = k; }
-    }
-    if(bestV<=0) return {key:"basic_pos", hex:COLORS.basic_pos, hitCount:0};
-    return {key:best, hex:COLORS[best], hitCount:bestV};
-  }
-
-  function intensityFromTokens(tokens){
-    // 0..10
-    const hits = scoreHits(tokens);
-    const sumHits = Object.values(hits).reduce((a,b)=>a+b,0);
-    const lenBoost = Math.min(3, Math.floor(tokens.length/6));
-    const base = sumHits*2 + lenBoost;
-    return Math.max(0, Math.min(10, base));
-  }
-
-  function ampFromIntensity(intensity, staffH){
-    return 8 + (intensity/10) * (staffH * 0.36);
-  }
-
-  function alphaFromIntensity(intensity){
-    return Math.min(0.92, 0.20 + (intensity/10) * 0.70);
-  }
-
-  function nextMode(tokensLower,i,cur){
-    if(hasNeverAgain(tokensLower,i)) return 4;
-    const t = tokensLower[i];
-    if(TRIG.break.has(t)) return 4;
-    if(TRIG.time.has(t)) return 3;
-    if(TRIG.contrast.has(t)) return 2;
-    return cur;
-  }
-
-  // ===== canvas draw =====
+  // =========================
+  // Canvas drawing
+  // =========================
   const canvas = document.getElementById("c");
   const ctx = canvas.getContext("2d");
 
   function clearCanvas(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    // white background explicitly
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle="#fff";
     ctx.fillRect(0,0,canvas.width,canvas.height);
   }
 
-  function yFromPitch(pitch01, yTop, staffH){
-    return yTop + (1 - pitch01) * staffH;
-  }
-
-  function drawWaveFilled(xs, amps, yCenter, colorHex, alpha){
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = colorHex;
-
+  function drawFilledWave(xs, amps, yCenter){
     ctx.beginPath();
     ctx.moveTo(xs[0], yCenter - amps[0]);
     for(let i=1;i<xs.length;i++) ctx.lineTo(xs[i], yCenter - amps[i]);
     for(let i=xs.length-1;i>=0;i--) ctx.lineTo(xs[i], yCenter + amps[i]);
     ctx.closePath();
     ctx.fill();
-    ctx.restore();
   }
 
-  function drawSentenceWave(sentence, yTop, staffH, usedColors){
-    const tokens = tokenize(sentence);
-    const tokensLower = tokens.map(t=>t.toLowerCase());
-    if(!tokens.length) return { switches: [] };
+  // envelope by pattern
+  function envelope(pattern, t){
+    // t: 0..1
+    if(pattern==="INCREASE"){
+      // small -> big
+      return 0.25 + 0.95*t;
+    }
+    if(pattern==="DECREASE"){
+      // big -> small
+      return 1.10 - 0.95*t;
+    }
+    if(pattern==="COMBINATION"){
+      // W-ish: rise, fall, rise
+      const a = Math.sin(Math.PI * t);
+      const b = Math.sin(2*Math.PI * t) * 0.35;
+      return 0.35 + 0.75*a + b;
+    }
+    if(pattern==="OUTLIER"){
+      // mostly stable + spike near outlier will be added separately
+      return 0.35 + 0.55*Math.sin(Math.PI*t);
+    }
+    return 0.6;
+  }
 
-    const overallCat = pickCategory(tokens);
-    const overallIntensity = intensityFromTokens(tokens);
-    usedColors.add(overallCat.key);
+  // base waveform mixture (more complex than before)
+  function synthSample(pattern, t, density){
+    // density ~ 0.6..1.4
+    // Multiple oscillators + noise
+    const f1 = 10 * density;
+    const f2 = 27 * density;
+    const f3 = 63 * density;
 
-    let pitch = (BASE_PITCH[overallCat.key] ?? 0.52) + randRange(-0.02, 0.02);
-    pitch = Math.max(0.06, Math.min(0.94, pitch));
-    const yCenter = yFromPitch(pitch, yTop, staffH);
+    const s1 = Math.sin(2*Math.PI*f1*t);
+    const s2 = 0.55*Math.sin(2*Math.PI*f2*t + 0.9);
+    const s3 = 0.22*Math.sin(2*Math.PI*f3*t + 1.7);
+
+    // smoothed noise via interpolation of random knots
+    const knotN = 28;
+    const u = t * knotN;
+    const i = Math.floor(u);
+    const frac = u - i;
+    // deterministic-ish noise knots
+    const n0 = (Math.sin((i+1)*999.91) * 43758.5453) % 1;
+    const n1 = (Math.sin((i+2)*999.91) * 43758.5453) % 1;
+    const noise = ( (n0 + (n1-n0)*(frac*frac*(3-2*frac))) - 0.5 );
+
+    // Pattern modifiers
+    if(pattern==="INCREASE"){
+      return (0.55*s1 + s2 + s3) + 0.28*noise;
+    }
+    if(pattern==="DECREASE"){
+      return (0.48*s1 + 0.8*s2 + 0.25*s3) + 0.22*noise;
+    }
+    if(pattern==="COMBINATION"){
+      return (0.52*s1 + 0.9*s2 + 0.35*s3) + 0.30*noise;
+    }
+    if(pattern==="OUTLIER"){
+      // quieter bed so spike stands out
+      return (0.32*s1 + 0.45*s2 + 0.12*s3) + 0.18*noise;
+    }
+    return (s1+s2+s3)*0.6 + 0.2*noise;
+  }
+
+  // outlier spike function
+  function spikeAt(t, t0){
+    // gaussian spike
+    const sigma = 0.0022;
+    const z = (t - t0);
+    return Math.exp(-(z*z)/(2*sigma*sigma));
+  }
+
+  function drawSentenceAsVisualCueWave(sentence, yTop, bandH){
+    const A = analyzeSentence(sentence);
 
     const xStart = 120;
     const xEnd = canvas.width - 120;
-    const usableW = xEnd - xStart;
+    const W = xEnd - xStart;
 
-    const weights = tokens.map(t=>Math.max(1.0, Math.min(10, t.length/3)));
-    const totalW = weights.reduce((a,b)=>a+b,0);
+    // position cue
+    const yCenter = yTop + (1 - A.pos) * bandH;
 
-    let mode = 1;
-    let runTokens = [];
-    let runWeight = 0;
-    let xCursor = xStart;
+    // length/intensity cue
+    const ampMax = 10 + (A.intensity/10) * (bandH * 0.42);
+    const alpha = 0.85;
 
-    const switches = [];
+    // density from intensity (more intense = more “busy”)
+    const density = 0.75 + (A.intensity/10) * 0.75; // 0.75..1.5
 
-    function drawRun(runTokensLocal, runW, modeLocal){
-      if(!runTokensLocal.length || runW <= 2) return { stop:false };
+    // angle cue (slight baseline tilt)
+    const tilt = A.angle * (bandH * 0.10); // px total shift
 
-      const cat = pickCategory(runTokensLocal);
-      const inten = intensityFromTokens(runTokensLocal);
-      const ampMax = ampFromIntensity(inten, staffH);
-      const alpha = alphaFromIntensity(inten);
-      usedColors.add(cat.key);
+    // samples
+    const N = 2400; // higher resolution = more detailed
+    const xs = new Array(N);
+    const amps = new Array(N);
 
-      const N = Math.max(160, Math.floor(runW/3));
-      const xs = new Array(N);
-      const amps = new Array(N);
+    // map token index to time for outlier spike positions
+    const outlierTimes = A.outliers.map(o => (o.index / Math.max(1, A.tokens.length-1)));
 
-      for(let i=0;i<N;i++){
-        const t = i/(N-1);
-        xs[i] = xCursor + t * runW;
+    for(let i=0;i<N;i++){
+      const t = i/(N-1);
+      xs[i] = xStart + t*W;
 
-        if(modeLocal === 1){
-          const noise = (rand()-0.5)*0.55;
-          const env = 0.55 + 0.45*Math.sin(t*Math.PI);
-          amps[i] = Math.max(0, ampMax * env * (0.55 + noise));
+      // envelope + waveform
+      const env = envelope(A.pattern, t);
+      const base = synthSample(A.pattern, t, density);
 
-        }else if(modeLocal === 2){
-          const dropout = (rand() < 0.07) ? 0.0 : 1.0;
-          const noise = (rand()-0.5)*1.25;
-          const env = 0.35 + 0.65*Math.sin(t*Math.PI);
-          amps[i] = Math.max(0, ampMax * env * Math.max(0, 0.65 + noise) * dropout);
-
-        }else if(modeLocal === 3){
-          const freq = randRange(10,18);
-          const vib = 0.6 + 0.4*Math.sin(2*Math.PI*freq*t);
-          const env = 0.45 + 0.55*Math.sin(t*Math.PI);
-          amps[i] = Math.max(0, ampMax * env * vib);
-
-        }else if(modeLocal === 4){
-          const spikePos = 0.18 + randRange(-0.05,0.05);
-          const decay = Math.exp(-6.0*Math.max(0, t-spikePos));
-          const spike = Math.exp(-((t-spikePos)*(t-spikePos))/(2*0.0015));
-          const a = (0.25*ampMax) + (2.2*ampMax*spike) + (0.9*ampMax*decay);
-          amps[i] = Math.max(0, a);
+      // add outlier spikes (if any)
+      let spike = 0;
+      if(A.pattern==="OUTLIER" && outlierTimes.length){
+        for(const t0 of outlierTimes){
+          spike += 2.4 * spikeAt(t, t0); // big spike
         }
       }
 
-      drawWaveFilled(xs, amps, yCenter, cat.hex, alpha);
-      if(modeLocal === 4) return { stop:true };
-      return { stop:false };
-    }
-
-    for(let i=0;i<tokens.length;i++){
-      const w = weights[i];
-      const nm = nextMode(tokensLower, i, mode);
-
-      if(nm !== mode){
-        switches.push({ at: tokens[i], toMode: nm });
-        const runW = usableW * (runWeight / totalW);
-        const res = drawRun(runTokens, runW, mode);
-        xCursor += runW;
-        runTokens = [];
-        runWeight = 0;
-        mode = nm;
-        if(res.stop) return { switches };
+      // brokenness for combination/contrast (micro dropouts)
+      let dropout = 1.0;
+      if(A.pattern==="COMBINATION" && A.hasContrast){
+        if(Math.sin(2*Math.PI*(7*density)*t) > 0.92) dropout = 0.25;
       }
 
-      runTokens.push(tokens[i]);
-      runWeight += w;
-
-      if(mode === 4){
-        if(hasNeverAgain(tokensLower,i) && i+1<tokens.length){
-          runTokens.push(tokens[i+1]);
-          runWeight += weights[i+1];
-        }
-        const runW = usableW * (runWeight / totalW);
-        drawRun(runTokens, runW, mode);
-        return { switches };
+      // periodic emphasis when time cues exist
+      let periodic = 1.0;
+      if(A.hasTime){
+        periodic = 0.75 + 0.25*Math.sin(2*Math.PI*(3.5*density)*t + 1.1);
       }
 
-      if(hasNeverAgain(tokensLower,i)) i++;
+      // final amplitude
+      let a = ampMax * env * Math.abs(base * dropout * periodic);
+      a += ampMax * spike;
+
+      // apply slight tilt in baseline by pushing amplitude a bit (visual tilt is via yCenter shift below)
+      amps[i] = a;
     }
 
-    const lastW = usableW * (runWeight / totalW);
-    drawRun(runTokens, lastW, mode);
-    return { switches };
+    // draw filled waveform in black (colorless)
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = "#111";
+    // baseline tilt: draw by shifting yCenter per x
+    // easiest: draw in chunks with different yCenter offsets
+    const chunk = 60;
+    for(let start=0; start<N-1; start+=chunk){
+      const end = Math.min(N-1, start+chunk);
+      const localXs = xs.slice(start, end+1);
+      const localAmps = amps.slice(start, end+1);
+
+      const tMid = ((start+end)/2)/(N-1);
+      const yLocal = yCenter + (tMid - 0.5) * tilt;
+
+      drawFilledWave(localXs, localAmps, yLocal);
+    }
+    ctx.restore();
+
+    // outlier marks (colored dots) — ONLY visual cue color usage
+    const marks = [];
+    if(A.outliers.length){
+      const markHex = EMO_COLORS[A.outlierColorKey] || "#F7399D";
+      ctx.save();
+      ctx.fillStyle = markHex;
+      ctx.strokeStyle = "rgba(0,0,0,.12)";
+      for(const o of A.outliers){
+        const t0 = (o.index / Math.max(1, A.tokens.length-1));
+        const x = xStart + t0 * W;
+        const tMid = t0;
+        const yLocal = yCenter + (tMid - 0.5) * tilt;
+        const r = 6.5;
+        ctx.beginPath();
+        ctx.arc(x, yLocal, r, 0, Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+        marks.push({ token:o.token, x, y:yLocal, color:markHex });
+      }
+      ctx.restore();
+    }
+
+    return { analysis:A, yCenter, ampMax, outlierMarks:marks };
   }
 
-  // ===== status UI update =====
+  // =========================
+  // Status UI
+  // =========================
   const statSentences = document.getElementById("statSentences");
-  const statOverall = document.getElementById("statOverall");
-  const swOverall = document.getElementById("swOverall");
+  const statPattern = document.getElementById("statPattern");
+  const barPos = document.getElementById("barPos");
+  const statPos = document.getElementById("statPos");
   const barIntensity = document.getElementById("barIntensity");
   const statIntensity = document.getElementById("statIntensity");
-  const statSwitches = document.getElementById("statSwitches");
-  const statColors = document.getElementById("statColors");
+  const statOutliers = document.getElementById("statOutliers");
 
-  function renderChips(list){
-    if(!list.length) return "—";
-    return list.map(s => `<span class="chip">${s}</span>`).join(" ");
+  function chips(items){
+    if(!items.length) return "—";
+    return items.map(x => `<span class="chip">${x}</span>`).join(" ");
   }
 
   function draw(text){
     clearCanvas();
     const sentences = splitSentences(text);
 
-    // layout on stage (no lines)
-    const staffH = 210;
-    const gap = 90;
-    const totalH = sentences.length * staffH + (sentences.length-1) * gap;
-    let yTop = (canvas.height - totalH) / 2;
-    if(yTop < 40) yTop = 40;
+    // layout
+    const bandH = 240;
+    const gap = 120;
+    const totalH = sentences.length*bandH + (sentences.length-1)*gap;
+    let yTop = (canvas.height - totalH)/2;
+    yTop = Math.max(60, yTop);
 
-    // overall stats from full text
-    const allTokens = tokenize(sentences.join(" "));
-    const overallCat = pickCategory(allTokens);
-    const overallInt = intensityFromTokens(allTokens);
+    const allOutliers = [];
+    let mainPattern = "—";
+    let avgPos = 0;
+    let avgIntensity = 0;
 
-    const usedColors = new Set();
-    const allSwitches = [];
-
-    for(const s of sentences){
-      const out = drawSentenceWave(s, yTop, staffH, usedColors);
-      allSwitches.push(...(out.switches || []));
-      yTop += staffH + gap;
+    for(let i=0;i<sentences.length;i++){
+      const res = drawSentenceAsVisualCueWave(sentences[i], yTop, bandH);
+      if(i===0) mainPattern = res.analysis.pattern;
+      avgPos += res.analysis.pos;
+      avgIntensity += res.analysis.intensity;
+      for(const o of res.analysis.outliers) allOutliers.push(o.token);
+      yTop += bandH + gap;
     }
 
-    // update status UI
+    const n = Math.max(1, sentences.length);
+    avgPos /= n;
+    avgIntensity /= n;
+
+    // update status
     statSentences.textContent = String(sentences.length);
+    statPattern.innerHTML = chips([mainPattern]);
 
-    swOverall.style.background = overallCat.hex;
-    statOverall.textContent = `${LABEL[overallCat.key] || overallCat.key} (${overallCat.hex})`;
+    const posPct = Math.round(avgPos*100);
+    barPos.style.width = posPct + "%";
+    barPos.style.background = "#111";
+    statPos.textContent = `${posPct}% (higher=upper)`;
 
-    const pct = Math.round((overallInt/10)*100);
-    barIntensity.style.width = pct + "%";
-    statIntensity.textContent = `${overallInt.toFixed(1)} / 10`;
+    const intPct = Math.round((avgIntensity/10)*100);
+    barIntensity.style.width = intPct + "%";
+    barIntensity.style.background = "#111";
+    statIntensity.textContent = `${avgIntensity.toFixed(1)} / 10`;
 
-    const switchText = allSwitches.slice(0, 8).map(s => {
-      const name = s.toMode===2 ? "broken" : s.toMode===3 ? "periodic" : s.toMode===4 ? "end" : "basic";
-      return `${s.at} → ${name}`;
-    });
-    statSwitches.innerHTML = renderChips(switchText);
-
-    const colorText = [...usedColors].map(k => `<span class="chip"><span class="sw" style="background:${COLORS[k]}"></span>${LABEL[k] || k}</span>`);
-    statColors.innerHTML = colorText.length ? colorText.join(" ") : "—";
+    const outlierList = allOutliers.slice(0,10);
+    statOutliers.innerHTML = outlierList.length
+      ? outlierList.map(t => `<span class="chip"><span class="dot"></span>${t}</span>`).join(" ")
+      : "—";
   }
 
-  // UI handlers
-  const inputEl = document.getElementById("input");
-  document.getElementById("btnGen").addEventListener("click", () => draw(inputEl.value));
-  document.getElementById("btnRandom").addEventListener("click", () => {
-    seed = Math.floor(Math.random()*1e9);
-    draw(inputEl.value);
-  });
-
+  // =========================
+  // Export
+  // =========================
   function downloadPNG(){
     const a=document.createElement("a");
     a.href=canvas.toDataURL("image/png");
-    a.download="emotion-waveform.png";
+    a.download="visual-cues-waveform.png";
     a.click();
   }
+
+  // UI events
+  const inputEl = document.getElementById("input");
+  document.getElementById("btnGen").addEventListener("click", () => draw(inputEl.value));
+  document.getElementById("btnRandom").addEventListener("click", () => { seed = Math.floor(Math.random()*1e9); draw(inputEl.value); });
   document.getElementById("btnDownload").addEventListener("click", downloadPNG);
   document.getElementById("btnSaveTop").addEventListener("click", downloadPNG);
   document.getElementById("btnSaveBottom").addEventListener("click", downloadPNG);
 
-  // initial render
+  // initial
   draw(inputEl.value);
 })();
 </script>
