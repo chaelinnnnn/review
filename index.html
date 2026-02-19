@@ -23,7 +23,7 @@
 
   <div class="wrap">
     <div>
-      <textarea id="input">I love this app but it crashes now. I paid for premium and still see ads. Never again, I'm done.</textarea>
+      <textarea id="input">I love this app but it crashes now</textarea>
 
       <div class="row">
         <button id="btnGen">Generate</button>
@@ -32,17 +32,7 @@
       </div>
 
       <div class="hint">
-        <div><span class="pill">Color</span> 감정 카테고리(너의 HEX) → 세그먼트 색</div>
-        <div><span class="pill">Pitch</span> 감정의 “각성도” → 세로 위치(높을수록 위)</div>
-        <div><span class="pill">Volume</span> 감정 강도 → 세그먼트 두께/면적</div>
-        <div><span class="pill">Form</span> 문장 신호에 따라 TYPE 전환(끊긴 블록)</div>
-        <div style="margin-top:8px;">
-          <b>TYPE 전환 규칙</b><br/>
-          • TYPE1: 기본 진행<br/>
-          • TYPE2: 접속사(but/however/though/although/yet) 등장 이후<br/>
-          • TYPE3: 시간표현(now/still/again/anymore/since/lately/recently/already) 등장 이후<br/>
-          • TYPE4: 단절(delete/uninstall/bye/done/never again) 등장 이후 → 큰 종결 블록 + 종료
-        </div>
+        <div><span class="pill">한 문장</span> 한 문장은 “하나의 연결선” 위에 끊긴 블록들이 얹히는 구조</div>
       </div>
 
       <div class="legend" id="legend"></div>
@@ -55,20 +45,17 @@
 
 <script>
 (() => {
-  // =========================
-  // 1) USER COLOR PALETTE (fixed)
-  // =========================
   const COLORS = {
-    basic_pos:   "#00FF90", // 기본 긍정
-    strong_pos:  "#DFFF29", // 강화 긍정
-    attach_pos:  "#FF6134", // 감정 애착
-    extreme_pos: "#F7399D", // 극단 긍정
-    mild_neg:    "#00FFFF", // 약한 불만
-    strong_neg:  "#006AA0", // 강한 불만
-    extreme_neg: "#020605", // 극단 부정
+    basic_pos:   "#00FF90",
+    strong_pos:  "#DFFF29",
+    attach_pos:  "#FF6134",
+    extreme_pos: "#F7399D",
+    mild_neg:    "#00FFFF",
+    strong_neg:  "#006AA0",
+    extreme_neg: "#020605",
   };
 
-  // Legend UI
+  // Legend
   const legendEl = document.getElementById("legend");
   [
     ["기본 긍정", COLORS.basic_pos],
@@ -85,49 +72,32 @@
     legendEl.appendChild(d);
   });
 
-  // =========================
-  // 2) KEYWORDS for COLOR CLASSIFICATION
-  //    (extend anytime; this is just a starter set)
-  // =========================
   const KW = {
     basic_pos: new Set(["good","nice","helpful","useful","easy","simple","convenient","cool","fun","works","reliable","smooth","accurate","decent","fine","okay"]),
     strong_pos: new Set(["great","excellent","fantastic","wonderful","impressed","powerful","brilliant","outstanding","productive","valuable","amazing"]),
     attach_pos: new Set(["love","loved","loving","favorite","favourite","obsessed","addicted","bestie","sister","everything","blessing","grateful","indispensable"]),
     extreme_pos: new Set(["best","perfect","10/10","five","stars","must-have","life-changing","beyond","mind","blowing","goat"]),
-
     mild_neg: new Set(["slow","laggy","buggy","glitchy","glitch","annoying","confusing","frustrating","limited","not","working","issue","problem","crash","crashes","freeze","freezes","stutter","stutters"]),
     strong_neg: new Set(["bad","terrible","horrible","ridiculous","unacceptable","useless","waste","misleading","unfair","overpriced","greedy","broken"]),
     extreme_neg: new Set(["worst","scam","scammers","fraud","toxic","disgusting","trash","junk","poison","delete","uninstall","bye","done","never","again"]),
   };
 
-  // =========================
-  // 3) SHAPE TRIGGERS (TYPE switches)
-  // =========================
   const TRIG = {
     type2_contrast: new Set(["but","however","though","although","yet"]),
     type3_time: new Set(["now","still","again","anymore","since","lately","recently","today","yesterday","already"]),
     type4_break: new Set(["delete","uninstall","bye","done"]),
   };
 
-  // =========================
-  // 4) PITCH MAP (0..1)  higher = higher on staff
-  //    - Treat as "arousal/activation" rather than literal musical pitch
-  // =========================
   const BASE_PITCH = {
-    basic_pos: 0.30,
-    strong_pos: 0.48,
-    attach_pos: 0.62,
-    extreme_pos: 0.86,
-    mild_neg: 0.34,
-    strong_neg: 0.66,
-    extreme_neg: 0.94,
+    basic_pos: 0.30, strong_pos: 0.48, attach_pos: 0.62, extreme_pos: 0.86,
+    mild_neg: 0.34, strong_neg: 0.66, extreme_neg: 0.94,
   };
 
-  // =========================
-  // 5) TOKENIZE + SENTENCE SPLIT
-  // =========================
   function splitSentences(text) {
-    // Keep it simple: split by . ! ? or line breaks
+    // ✅ “한 문장=한 줄” 원하면 아래처럼 '줄바꿈' 기준만으로도 가능.
+    // 지금은 마침표로도 나뉘게 되어있으니, 원하면 아래 한 줄로 바꿔도 됨:
+    // return (text || "").split(/[\n\r]+/g).map(s=>s.trim()).filter(Boolean);
+
     return (text || "")
       .split(/[\n\r]+|(?<=[.!?])\s+/g)
       .map(s => s.trim())
@@ -135,10 +105,8 @@
   }
 
   function tokenize(sentence) {
-    return sentence
-      .trim()
-      .split(/\s+/g)
-      .map(t => t.replace(/[^\w'\/-]/g, "")) // strip punctuation but keep wordish chars
+    return sentence.trim().split(/\s+/g)
+      .map(t => t.replace(/[^\w'\/-]/g, ""))
       .filter(Boolean);
   }
 
@@ -146,9 +114,6 @@
     return (tokensLower[i] === "never" && tokensLower[i+1] === "again");
   }
 
-  // =========================
-  // 6) DETERMINISTIC RNG
-  // =========================
   let seed = 1234567;
   function rand() {
     seed = (seed * 1664525 + 1013904223) % 4294967296;
@@ -156,9 +121,6 @@
   }
   function randRange(a,b){ return a + (b-a)*rand(); }
 
-  // =========================
-  // 7) COLOR PICK + INTENSITY
-  // =========================
   function scoreHits(tokens) {
     const hits = {
       basic_pos: 0, strong_pos: 0, attach_pos: 0, extreme_pos: 0,
@@ -183,46 +145,35 @@
   }
 
   function intensityFromTokens(tokens) {
-    // 0..10 : based on keyword hits + sentence length a bit
     const hits = scoreHits(tokens);
     const sumHits = Object.values(hits).reduce((a,b)=>a+b,0);
-    const lenBoost = Math.min(3, Math.floor(tokens.length / 6)); // long talk feels stronger
-    const base = sumHits * 2 + lenBoost; // simple
+    const lenBoost = Math.min(3, Math.floor(tokens.length / 6));
+    const base = sumHits * 2 + lenBoost;
     return Math.max(0, Math.min(10, base));
   }
 
   function thicknessFromIntensity(intensity) {
-    // volume -> thickness (px)
-    return 2 + (intensity / 10) * 22; // 2..24
+    return 2 + (intensity / 10) * 22;
   }
-
   function opacityFromIntensity(intensity) {
     return Math.min(0.96, 0.22 + (intensity/10)*0.70);
   }
 
-  // =========================
-  // 8) TYPE SCAN (progressive switching)
-  // =========================
   function initialType(tokensLower) {
     const first = tokensLower[0];
     if (first === "i" || first === "i'm" || first === "im" || first === "my") return 1;
-    return 1; // default start
+    return 1;
   }
 
   function nextType(tokensLower, i, curType) {
     if (hasNeverAgain(tokensLower, i)) return 4;
     const t = tokensLower[i];
-
     if (TRIG.type4_break.has(t)) return 4;
     if (TRIG.type3_time.has(t)) return 3;
     if (TRIG.type2_contrast.has(t)) return 2;
-
     return curType;
   }
 
-  // =========================
-  // 9) DRAW: BLOKKEN-LIKE SCORE
-  // =========================
   const canvas = document.getElementById("c");
   const ctx = canvas.getContext("2d");
 
@@ -234,7 +185,7 @@
 
   function drawStaff(yTop, staffH, lines=3) {
     ctx.save();
-    ctx.strokeStyle = "rgba(0,0,0,0.20)";
+    ctx.strokeStyle = "rgba(0,0,0,0.18)";
     ctx.lineWidth = 1;
     for (let i=0; i<=lines; i++) {
       const y = yTop + (staffH * i/lines);
@@ -247,95 +198,95 @@
   }
 
   function yFromPitch(pitch01, yTop, staffH) {
-    // higher pitch => closer to yTop
     return yTop + (1 - pitch01) * staffH;
   }
 
-  // Core: render one sentence as multiple "runs"
+  // ✅ NEW: 연결선(한 문장 = 하나의 흐름)
+  function drawContinuityLine(xStart, xEnd, y, colorHex) {
+    ctx.save();
+    ctx.strokeStyle = colorHex;         // 감정색으로 연결선
+    ctx.globalAlpha = 0.25;            // 너무 세지 않게
+    ctx.lineWidth = 2;                 // 얇게
+    ctx.beginPath();
+    ctx.moveTo(xStart, y);
+    ctx.lineTo(xEnd, y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function drawSentence(sentence, yTop, staffH) {
     const tokens = tokenize(sentence);
     const tokensLower = tokens.map(t => t.toLowerCase());
     if (!tokens.length) return;
 
-    // progressive run segmentation by TYPE
-    let curType = initialType(tokensLower);
-    let runTokens = [];
-    let runType = curType;
-
-    // layout params
     const xStart = 70;
     const xEnd = canvas.width - 70;
     const usableW = xEnd - xStart;
 
-    // time mapping: each token consumes width proportional to its character length
+    // 문장 전체 카테고리(연결선 색용)
+    const overallCat = pickCategory(tokens);
+    let overallPitch = (BASE_PITCH[overallCat.key] ?? 0.4) + randRange(-0.02, 0.02);
+    overallPitch = Math.max(0.05, Math.min(0.98, overallPitch));
+    const yBase = yFromPitch(overallPitch, yTop, staffH);
+
+    // ✅ 연결선 먼저 그리기 (한 문장 흐름)
+    drawContinuityLine(xStart, xEnd, yBase, overallCat.hex);
+
+    // time mapping weights
     const weights = tokens.map(t => Math.max(1.0, Math.min(10, t.length / 3)));
     const totalW = weights.reduce((a,b)=>a+b,0);
-
     let x = xStart;
 
-    function flushRun() {
-      if (!runTokens.length) return { stop:false };
+    let curType = initialType(tokensLower);
+    let runTokens = [];
+    let runType = curType;
 
-      // color + pitch + volume for this run
+    function flushRun(runWeight) {
+      if (!runTokens.length) return { stop:false, usedW: 0 };
+
       const cat = pickCategory(runTokens);
       const intensity = intensityFromTokens(runTokens);
       const thick = thicknessFromIntensity(intensity);
       const alpha = opacityFromIntensity(intensity);
 
-      // pitch: category base + small jitter + type influence
-      let pitch = BASE_PITCH[cat.key] ?? 0.4;
-      // TYPE influence: 2 = slight drop (hesitation), 3 = repeated (stable band), 4 = spike (final)
-      if (runType === 2) pitch -= 0.08;
+      // run width
+      const runW = usableW * (runWeight / totalW);
+
+      // pitch per run: base from category, but still “attached” to sentence baseline
+      let pitch = (BASE_PITCH[cat.key] ?? 0.4);
+      if (runType === 2) pitch -= 0.06;
       if (runType === 3) pitch += 0.02;
       if (runType === 4) pitch += 0.10;
       pitch = Math.max(0.05, Math.min(0.98, pitch + randRange(-0.03, 0.03)));
-
       const y = yFromPitch(pitch, yTop, staffH);
 
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.fillStyle = cat.hex;
 
-      // compute run width from its token weights
-      let runWeight = 0;
-      for (const rt of runTokens) {
-        const idx = tokens.indexOf(rt); // not perfect for duplicates; ok for visuals
-      }
-      // better: sum by char length directly
-      runWeight = runTokens.reduce((a,t)=>a+Math.max(1.0, Math.min(10, t.length/3)), 0);
-      const runW = usableW * (runWeight / totalW);
-
-      // BLOKKEN STYLE:
-      // - TYPE1: few medium rectangles, slight gaps (stable)
-      // - TYPE2: more fragments + bigger gaps (broken)
-      // - TYPE3: dotted squares (repetition)
-      // - TYPE4: one large terminal block and stop
-
       if (runType === 4) {
-        // terminal block: big, dense
-        const W = Math.min(usableW * 0.35, Math.max(120, runW + 160));
-        const H = Math.min(staffH * 0.70, Math.max(40, thick * 3.0));
+        const W = Math.min(usableW * 0.35, Math.max(140, runW + 180));
+        const H = Math.min(staffH * 0.70, Math.max(46, thick * 3.0));
         ctx.fillRect(x, y - H/2, W, H);
         ctx.restore();
-        return { stop:true };
+        return { stop:true, usedW: runW };
       }
 
       if (runType === 3) {
-        // dotted: small squares along run
         const dotN = Math.max(6, Math.floor(runW / 24));
         const size = Math.max(6, Math.min(18, thick * 0.7));
         for (let i=0; i<dotN; i++) {
           const dx = x + i * (runW / dotN) + randRange(-4, 4);
-          const dy = y + randRange(-10, 10);
+          // dot y는 baseline 근처로 오게 약간만 흔들기
+          const dy = yBase + randRange(-10, 10);
           ctx.fillRect(dx, dy - size/2, size, size);
         }
-        x += runW + 14;
         ctx.restore();
-        return { stop:false };
+        return { stop:false, usedW: runW };
       }
 
-      // TYPE1 or TYPE2: fragment blocks
-      const fragBase = (runType === 1) ? 3 : 6; // more pieces when broken
+      // TYPE1 / TYPE2 fragment blocks
+      const fragBase = (runType === 1) ? 3 : 6;
       const fragN = Math.max(2, Math.min(10, fragBase + Math.floor(runTokens.length/3)));
 
       let remaining = runW;
@@ -347,70 +298,76 @@
         const w = Math.min(remaining, randRange(minW, maxW));
         const h = Math.max(8, Math.min(staffH * 0.55, thick * randRange(1.2, 2.4)));
 
-        // slight vertical jitter
-        const dy = randRange(-12, 12);
+        // fragment는 baseline에 더 붙여서 “하나의 문장” 느낌 강화
+        const dy = (runType === 2) ? randRange(-14, 14) : randRange(-10, 10);
+        ctx.fillRect(xx, (yBase + dy) - h/2, w, h);
 
-        ctx.fillRect(xx, (y + dy) - h/2, w, h);
-
-        const gap = (runType === 1) ? randRange(10, 22) : randRange(18, 46); // bigger gaps for broken
+        const gap = (runType === 1) ? randRange(10, 22) : randRange(18, 46);
         xx += w + gap;
         remaining -= (w + gap);
         if (remaining < 10) break;
       }
 
-      x += runW + ((runType === 1) ? 16 : 22);
       ctx.restore();
-      return { stop:false };
+      return { stop:false, usedW: runW };
     }
 
-    // scan + build runs
+    // scan tokens, accumulate run weight
+    let runWeight = 0;
+
     for (let i=0; i<tokens.length; i++) {
+      const w = weights[i];
       const nt = nextType(tokensLower, i, curType);
 
       if (nt !== curType) {
-        const res = flushRun();
+        const res = flushRun(runWeight);
         if (res.stop) return;
+        x += res.usedW + ((curType === 2) ? 22 : 16);
         curType = nt;
         runType = curType;
         runTokens = [];
+        runWeight = 0;
       }
 
       runTokens.push(tokens[i]);
+      runWeight += w;
 
-      // if Type4 triggered, flush immediately to stop
       if (curType === 4) {
-        // include "again" if it was "never again"
-        if (hasNeverAgain(tokensLower, i) && i+1 < tokens.length) runTokens.push(tokens[i+1]);
-        flushRun();
+        if (hasNeverAgain(tokensLower, i) && i+1 < tokens.length) {
+          runTokens.push(tokens[i+1]);
+          runWeight += weights[i+1];
+        }
+        flushRun(runWeight);
         return;
       }
 
-      // skip the second word of "never again" bigram to avoid double handling
       if (hasNeverAgain(tokensLower, i)) i++;
     }
 
-    flushRun();
+    const last = flushRun(runWeight);
+    x += last.usedW;
   }
 
   function draw(text) {
     clearCanvas();
 
-    // Title-like header (optional)
+    // Header
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,0.85)";
     ctx.font = "600 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
     ctx.fillText("Emotion Score", 70, 54);
     ctx.restore();
 
-    // labels highest/lowest tone
+    const sentences = splitSentences(text);
+
+    // ✅ 라벨은 “한 번만” 표시 (여러 줄이어도 중복 X)
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,0.55)";
     ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-    ctx.fillText("highest tone", 70, 90);
-    ctx.fillText("lowest tone", 70, 0); // will place per staff below
+    ctx.fillText("highest tone", 70, 92);
+    ctx.fillText("lowest tone", 70, 92 + 120 + 16); // 첫 staff 기준 위치(보기용)
     ctx.restore();
 
-    const sentences = splitSentences(text);
     const marginTop = 110;
     const gap = 34;
     const staffH = 120;
@@ -419,41 +376,26 @@
 
     for (let s=0; s<sentences.length; s++) {
       if (y + staffH > canvas.height - 60) break;
-
       drawStaff(y, staffH, 3);
-
-      // lowest tone label per staff
-      ctx.save();
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
-      ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      ctx.fillText("lowest tone", 70, y + staffH + 16);
-      ctx.restore();
-
       drawSentence(sentences[s], y, staffH);
-
       y += staffH + gap;
     }
   }
 
-  // =========================
-  // 10) UI handlers
-  // =========================
+  // UI
   const inputEl = document.getElementById("input");
   document.getElementById("btnGen").addEventListener("click", () => draw(inputEl.value));
-
   document.getElementById("btnDownload").addEventListener("click", () => {
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
     a.download = "emotion-score.png";
     a.click();
   });
-
   document.getElementById("btnRandomize").addEventListener("click", () => {
     seed = Math.floor(Math.random() * 1e9);
     draw(inputEl.value);
   });
 
-  // first render
   draw(inputEl.value);
 })();
 </script>
