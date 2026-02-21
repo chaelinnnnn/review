@@ -320,8 +320,10 @@ function drawRow(words, N, yTop, cellW, rowH, rulerH, indexH, padL, totalW, emoK
   const hasAnyAnchor = anchors.some(a=>a!==null);
   const cellValues   = new Array(N);
 
+  // Average weight across all emotions for neutral/unrecognized sentences
+  const AVG_WEIGHT = 0.35;
   if(!hasAnyAnchor){
-    for(let i=0;i<N;i++) cellValues[i]={ weight:0.0, R:200, G:200, B:200 };
+    for(let i=0;i<N;i++) cellValues[i]={ weight:AVG_WEIGHT, R:180, G:180, B:180 };
   } else {
     for(let i=0;i<N;i++){
       if(anchors[i]){ cellValues[i]=anchors[i]; continue; }
