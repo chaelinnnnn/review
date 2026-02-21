@@ -100,9 +100,7 @@
   <div class="panel">
     <div class="panel-section">
       <div class="plabel">Input Text</div>
-      <textarea id="inp">I love this app but it crashes now. Never again, I'm done.
-This update is absolutely perfect, best version yet.
-Totally broken after the last patch, avoid at all costs.</textarea>
+      <textarea id="inp" placeholder="Enter up to 3 sentences, one per line..."></textarea>
       <div class="brow">
         <button class="bprim" id="btnGen">Generate</button>
         <button class="bsec" id="btnRnd">↺</button>
@@ -431,7 +429,7 @@ let db;
 inp.addEventListener('input',()=>{clearTimeout(db);db=setTimeout(()=>draw(inp.value),280);});
 window.addEventListener('resize',()=>draw(lastText||inp.value));
 
-draw(inp.value);
+if(inp.value.trim()) draw(inp.value);
 })();
 </script>
 </body>
