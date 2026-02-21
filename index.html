@@ -13,16 +13,12 @@
     font-size:10px;color:#000;
     display:flex;flex-direction:column;min-height:100vh;
   }
-
-  /* ── TOPBAR ── */
   .topbar{
     display:flex;align-items:baseline;justify-content:space-between;
     padding:14px 28px 10px;
     border-bottom:1px solid #000;
   }
-  .logo{
-    font-size:9px;letter-spacing:.22em;text-transform:uppercase;
-  }
+  .logo{ font-size:9px;letter-spacing:.22em;text-transform:uppercase; }
   .right{display:flex;gap:0;}
   .btn{
     background:none;border:none;border-left:1px solid #000;
@@ -33,95 +29,61 @@
   }
   .btn:first-child{border-left:none;}
   .btn:hover{background:#000;color:#fff;}
-
-  /* ── LAYOUT: two column ── */
   .layout{display:flex;flex:1;min-height:0;}
-
-  /* left sidebar */
   .panel{
     width:240px;min-width:240px;
     border-right:1px solid #000;
     display:flex;flex-direction:column;
     background:#fff;overflow-y:auto;
   }
-
-  .panel-section{
-    padding:16px 20px;
-    border-bottom:1px solid #000;
-  }
+  .panel-section{ padding:16px 20px; border-bottom:1px solid #000; }
   .panel-section:last-child{border-bottom:none;}
-
   .plabel{
     font-size:8px;letter-spacing:.22em;text-transform:uppercase;
-    color:#000;opacity:.45;
-    margin-bottom:10px;
+    color:#000;opacity:.45;margin-bottom:10px;
   }
-
   textarea{
     width:100%;height:100px;resize:none;padding:10px;
     font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;
-    background:#f8f8f8;border:1px solid #000;outline:none;color:#000;
-    border-radius:0;
+    background:#f8f8f8;border:1px solid #000;outline:none;color:#000;border-radius:0;
   }
   .brow{display:flex;margin-top:8px;border:1px solid #000;}
   .bprim{
     flex:2;background:#000;color:#fff;border:none;border-right:1px solid #fff;
-    padding:9px 0;
-    font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.18em;
+    padding:9px 0;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.18em;
     text-transform:uppercase;cursor:pointer;
   }
   .bprim:hover{background:#333;}
   .bsec{
-    flex:1;background:#fff;border:none;
-    padding:9px 0;
+    flex:1;background:#fff;border:none;padding:9px 0;
     font-family:'IBM Plex Mono',monospace;font-size:11px;
     color:#000;cursor:pointer;text-align:center;
   }
   .bsec:hover{background:#f0f0f0;}
-
-  /* legend rows — key:value style like reference */
   .leg-list{display:flex;flex-direction:column;}
-  .leg{
-    display:flex;align-items:center;gap:0;
-    border-bottom:1px solid rgba(0,0,0,.08);
-  }
+  .leg{ display:flex;align-items:center;gap:0;border-bottom:1px solid rgba(0,0,0,.08); }
   .leg:last-child{border:none;}
-  .leg-bar{
-    width:4px;height:100%;min-height:28px;flex-shrink:0;
-    align-self:stretch;
-  }
+  .leg-bar{ width:4px;height:100%;min-height:28px;flex-shrink:0;align-self:stretch; }
   .leg-name{
-    flex:1;padding:7px 10px;
-    font-size:8px;letter-spacing:.12em;text-transform:uppercase;
+    flex:1;padding:7px 10px;font-size:8px;letter-spacing:.12em;text-transform:uppercase;
     border-right:1px solid rgba(0,0,0,.08);color:#000;opacity:.5;
   }
-  .leg-n{
-    padding:7px 10px;font-size:9px;opacity:.3;min-width:28px;text-align:right;
-  }
+  .leg-n{ padding:7px 10px;font-size:9px;opacity:.3;min-width:28px;text-align:right; }
   .leg-n.on{opacity:1;}
-
-  /* keywords */
   .kw{display:flex;flex-wrap:wrap;gap:4px;max-height:80px;overflow-y:auto;}
   .kw span{
     padding:2px 6px;font-size:8px;letter-spacing:.08em;text-transform:uppercase;
     border:1px solid rgba(0,0,0,.15);color:#000;
   }
-
-  /* canvas stage */
   .stage{
-    flex:1;overflow:auto;
-    display:flex;align-items:flex-start;
+    flex:1;overflow:auto;display:flex;align-items:flex-start;
     padding:32px 28px;background:#fff;
   }
   canvas{display:block;image-rendering:crisp-edges;}
-
-  /* footer */
   .foot{
-    border-top:1px solid #000;
-    padding:8px 28px;
+    border-top:1px solid #000;padding:8px 28px;
     font-size:8px;letter-spacing:.14em;text-transform:uppercase;
-    color:#000;opacity:.35;
-    display:flex;justify-content:space-between;
+    color:#000;opacity:.35;display:flex;justify-content:space-between;
   }
 </style>
 </head>
@@ -136,7 +98,6 @@
 
 <div class="layout">
   <div class="panel">
-
     <div class="panel-section">
       <div class="plabel">Input Text</div>
       <textarea id="inp">I love this app but it crashes now. Never again, I'm done.</textarea>
@@ -145,17 +106,14 @@
         <button class="bsec" id="btnRnd">↺</button>
       </div>
     </div>
-
     <div class="panel-section">
       <div class="plabel">Legend</div>
       <div class="leg-list" id="legEl"></div>
     </div>
-
     <div class="panel-section">
       <div class="plabel">Keywords</div>
       <div class="kw" id="kwEl"></div>
     </div>
-
   </div>
   <div class="stage"><canvas id="c"></canvas></div>
 </div>
@@ -165,40 +123,76 @@
   <span id="fInfo">—</span>
 </div>
 
-
 <script>
 (() => {
 'use strict';
 
-// ── EMOTION CONFIG ─────────────────────────────────────────────────
-// 7 emotions, each with a distinct color matching our palette
+// ── EMOTION CONFIG — 6 categories, P1-P3 / N1-N3 ──────────────────
 const EMOTIONS = [
-  { key:'basic_pos',   label:'Basic Positive',   color:'#00FF90', weight:0.30 },
-  { key:'strong_pos',  label:'Strong Positive',  color:'#DFFF29', weight:0.50 },
-  { key:'attach_pos',  label:'Emotional Attach', color:'#FF6134', weight:0.62 },
-  { key:'extreme_pos', label:'Extreme Positive', color:'#F7399D', weight:0.82 },
-  { key:'mild_neg',    label:'Mild Negative',    color:'#00FFFF', weight:0.32 },
-  { key:'strong_neg',  label:'Strong Negative',  color:'#006AA0', weight:0.60 },
-  { key:'extreme_neg', label:'Extreme Negative', color:'#020605', weight:0.88 },
+  { key:'p1', label:'P1 · Mild Positive',    color:'#00FF90', weight:0.28 },
+  { key:'p2', label:'P2 · Strong Positive',  color:'#DFFF29', weight:0.52 },
+  { key:'p3', label:'P3 · Extreme Positive', color:'#F7399D', weight:0.85 },
+  { key:'n1', label:'N1 · Mild Negative',    color:'#00FFFF', weight:0.30 },
+  { key:'n2', label:'N2 · Strong Negative',  color:'#006AA0', weight:0.60 },
+  { key:'n3', label:'N3 · Extreme Negative', color:'#020605', weight:0.90 },
 ];
 const EMO_MAP = Object.fromEntries(EMOTIONS.map(e=>[e.key,e]));
 
-// ── WORD SETS ──────────────────────────────────────────────────────
+// ── KEYWORD SETS — build weak→strong so stronger category overwrites ─
 const WORD_MAP = new Map();
 const SETS = {
-  basic_pos:   ['good','nice','okay','fine','decent','works','working','useful','helpful','simple','easy','clean','smooth','clear','solid','reliable','convenient','comfortable','fair','reasonable','acceptable','satisfied','happy','not bad','pretty good'],
-  strong_pos:  ['great','awesome','amazing','excellent','fantastic','wonderful','impressive','love it','so good','recommend','well done','brilliant','superb','incredible','outstanding','perfectly','really good','very good','highly recommend'],
-  attach_pos:  ['love','loved','loving','favorite','favourite','obsessed','addicted','always','loyal','trust','feels','special','dear','fan','attached','every day','means','personal','go-to'],
-  extreme_pos: ['best','perfect','life-changing','mind-blowing','flawless','must have','unbelievable','legendary','iconic','ultimate','five stars','10/10','no complaints','nothing better'],
-  mild_neg:    ['slow','laggy','slightly','sometimes','confusing','unclear','not great','could be better','needs improvement','annoying','inconvenient','not ideal','meh','limited','minor','buggy','a bit'],
-  strong_neg:  ['bad','terrible','poor','disappointing','frustrating','useless','waste','broken','hate','awful','ridiculous','unacceptable','glitchy','crashes','freezes','garbage','low quality','very bad'],
-  extreme_neg: ['worst','never','again','delete','uninstall','done','scam','fraud','trash','junk','disaster','ruined','avoid','horrible','regret','never again','completely useless'],
+  p1: [
+    'good','nice','okay','fine','decent','not bad','pretty good',
+    'works','working','useful','helpful','simple','easy','clean',
+    'smooth','clear','solid','reliable','convenient','comfortable',
+    'fair','reasonable','acceptable','satisfied','happy',
+  ],
+  p2: [
+    'great','very good','really good','awesome','amazing','excellent',
+    'fantastic','wonderful','impressive','love it','so good',
+    'highly recommend','recommend','well done','brilliant','superb',
+    'incredible','outstanding','perfect','exactly what i needed',
+    // from Emotional Attachment (moderate)
+    'love','loved','loving','favorite','favourite','my go-to',
+    'trust it','feels right','feels good','big fan','personal favorite',
+  ],
+  p3: [
+    'best','the best','best ever','absolutely perfect','life-changing',
+    'mind-blowing','flawless','10/10','five stars','must have',
+    'unbelievable','insane','legendary','iconic','no complaints',
+    "can't complain",'beyond amazing','literally perfect','nothing better','ultimate',
+    // from Emotional Attachment (high intensity)
+    'obsessed','addicted',"can't live without",'always use','use it every day',
+    'so attached','loyal','means a lot','special','dear','my app',
+  ],
+  n1: [
+    'slow','a bit slow','laggy','slightly buggy','sometimes crashes',
+    'confusing','unclear','not great','could be better','needs improvement',
+    'annoying','a little annoying','inconvenient','not ideal','meh',
+    'okay but','not impressed','limited','minor issue','small problem',
+    'takes time','too many ads',
+  ],
+  n2: [
+    'bad','very bad','terrible','poor','disappointing','frustrating',
+    'useless','waste of time','waste of money','broken',"doesn't work",
+    'hard to use','hate it','not worth it','awful','ridiculous',
+    'unacceptable','problematic','glitchy','buggy','crashes constantly',
+    'freezes','garbage','low quality',
+  ],
+  n3: [
+    'worst','worst ever','never again','delete','uninstall',"i'm done",
+    'done with this','scam','fraud','trash','junk','hate this app',
+    'completely useless','totally broken','disaster','ruined',
+    'avoid',"don't download",'0 stars','horrible','unforgivable',
+    'terrible experience','regret downloading',
+  ],
 };
+// weak→strong order so stronger entry overwrites duplicate keys
 for(const [emo,words] of Object.entries(SETS)){
   for(const w of words) WORD_MAP.set(w, emo);
 }
 
-// ── TOKENIZE: returns every word with emo tag ──────────────────────
+// ── TOKENIZE ──────────────────────────────────────────────────────
 function tokenize(text){
   const words = text.toLowerCase()
     .split(/\s+/)
@@ -224,32 +218,29 @@ let lastText = '';
 
 function draw(text){
   lastText = text;
-  const words  = tokenize(text);
-  const N      = words.length;
+  const words = tokenize(text);
+  const N     = words.length;
   if(!N) return;
 
   const counts = {};
   for(const e of EMOTIONS) counts[e.key]=0;
   for(const w of words) if(w.emo) counts[w.emo]++;
 
-  const DPR    = window.devicePixelRatio||1;
+  const DPR = window.devicePixelRatio||1;
 
-  // ── Layout ─────────────────────────────────────────────────────
-  const ROW_H   = 160;   // height of the color block area
-  const RULER_H = 18;    // ruler strip below
-  const INDEX_H = 20;    // circle index row above
-  const GAP     = 18;    // gap between the two rows
+  const ROW_H   = 160;
+  const RULER_H = 18;
+  const INDEX_H = 20;
+  const GAP     = 18;
   const PAD_L   = 8;
   const PAD_T   = 10;
   const PAD_B   = 12;
 
-  // Fill the full stage width — compute CELL_W from available space
   const stageEl = document.querySelector('.stage');
   const availW  = stageEl.clientWidth - PAD_L*2 - 48;
   const CELL_W  = Math.max(12, Math.floor(availW / N));
 
-  // Two rows: row0 = positive emotions, row1 = negative emotions
-  const ROWS = 2;
+  const ROWS   = 2;
   const totalW = PAD_L*2 + N*CELL_W;
   const totalH = PAD_T + ROWS*(INDEX_H+ROW_H+RULER_H) + (ROWS-1)*GAP + PAD_B;
 
@@ -259,7 +250,6 @@ function draw(text){
   canvas.style.height = totalH+'px';
   ctx.setTransform(DPR,0,0,DPR,0,0);
 
-  // White canvas bg
   ctx.fillStyle='#ffffff';
   ctx.fillRect(0,0,totalW,totalH);
 
@@ -268,15 +258,10 @@ function draw(text){
     PAD_T + INDEX_H + ROW_H + RULER_H + GAP,
   ];
 
-  // Row 0: positive emotions
-  drawRow(words, N, rowY[0], CELL_W, ROW_H, RULER_H, INDEX_H, PAD_L, totalW,
-    ['basic_pos','strong_pos','attach_pos','extreme_pos'], 0);
+  drawRow(words, N, rowY[0], CELL_W, ROW_H, RULER_H, INDEX_H, PAD_L, totalW, ['p1','p2','p3']);
+  drawRow(words, N, rowY[1], CELL_W, ROW_H, RULER_H, INDEX_H, PAD_L, totalW, ['n1','n2','n3']);
 
-  // Row 1: negative emotions
-  drawRow(words, N, rowY[1], CELL_W, ROW_H, RULER_H, INDEX_H, PAD_L, totalW,
-    ['mild_neg','strong_neg','extreme_neg'], 1);
-
-  // ── Sidebar ────────────────────────────────────────────────────
+  // Sidebar
   document.getElementById('legEl').innerHTML = EMOTIONS.map(e=>{
     const c=counts[e.key]||0;
     return `<div class="leg">
@@ -295,33 +280,10 @@ function draw(text){
 }
 
 // ── ROW RENDERER ──────────────────────────────────────────────────
-function drawRow(words, N, yTop, cellW, rowH, rulerH, indexH, padL, totalW, emoKeys, rowIdx){
-  const bandY = yTop + indexH; // where the block area starts
+function drawRow(words, N, yTop, cellW, rowH, rulerH, indexH, padL, totalW, emoKeys){
+  const bandY = yTop + indexH;
 
-  // ── 1. Circle index row ──────────────────────────────────────
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font         = `7px 'DM Mono', monospace`;
-
-  for(let i=0;i<N;i++){
-    const cx = padL + i*cellW + cellW/2;
-    const cy = yTop + indexH/2;
-
-    // circles and numbers hidden
-  }
-
-  // ── 2. No solid grid background — transparent ────────────────────
-  // (removed fill so stripes show cleanly on canvas bg)
-
-  // ── 3. Vertical cell dividers (very faint, drawn AFTER stripes) ──
-  // deferred to after stripe rendering
-
-  // ── 4. Continuous stripe across the entire row ───────────────────
-  // Instead of per-cell blocks, draw ONE continuous stripe pass
-  // across the full row width. Each stripe column samples the
-  // interpolated {weight, R, G, B} at that exact x position.
-
-  // Build per-cell interpolated values (same logic as before)
+  // ── Anchor + interpolation ────────────────────────────────────
   const anchors = new Array(N).fill(null);
   for(let i=0;i<N;i++){
     const w = words[i];
@@ -333,10 +295,10 @@ function drawRow(words, N, yTop, cellW, rowH, rulerH, indexH, padL, totalW, emoK
   }
 
   const hasAnyAnchor = anchors.some(a=>a!==null);
-  const cellValues = new Array(N);
+  const cellValues   = new Array(N);
 
   if(!hasAnyAnchor){
-    for(let i=0;i<N;i++) cellValues[i]={ weight:0.0, R:180, G:180, B:180 };
+    for(let i=0;i<N;i++) cellValues[i]={ weight:0.0, R:200, G:200, B:200 };
   } else {
     for(let i=0;i<N;i++){
       if(anchors[i]){ cellValues[i]=anchors[i]; continue; }
@@ -345,7 +307,7 @@ function drawRow(words, N, yTop, cellW, rowH, rulerH, indexH, padL, totalW, emoK
       for(let k=i+1;k<N;k++){ if(anchors[k]){nextIdx=k;break;} }
 
       if(prevIdx===-1&&nextIdx===-1){
-        cellValues[i]={weight:0.0,R:180,G:180,B:180};
+        cellValues[i]={weight:0.0,R:200,G:200,B:200};
       } else if(prevIdx===-1){
         const a=anchors[nextIdx], dist=nextIdx-i;
         const f=Math.max(0.0, 1-dist*0.14);
@@ -358,7 +320,7 @@ function drawRow(words, N, yTop, cellW, rowH, rulerH, indexH, padL, totalW, emoK
         const prev=anchors[prevIdx], next=anchors[nextIdx];
         const span=nextIdx-prevIdx;
         const t=(i-prevIdx)/span;
-        const s=t*t*(3-2*t); // smoothstep
+        const s=t*t*(3-2*t);
         cellValues[i]={
           weight: prev.weight+(next.weight-prev.weight)*s,
           R: Math.round(prev.R+(next.R-prev.R)*s),
@@ -369,14 +331,10 @@ function drawRow(words, N, yTop, cellW, rowH, rulerH, indexH, padL, totalW, emoK
     }
   }
 
-  // Helper: sample interpolated value at fractional cell position x (0..N)
   function sampleAt(x){
-    const i0 = Math.floor(x);
-    const i1 = Math.min(i0+1, N-1);
-    const frac = x - i0;
-    const s = frac*frac*(3-2*frac); // smoothstep within cell
-    const a = cellValues[Math.max(0,i0)];
-    const b = cellValues[i1];
+    const i0=Math.floor(x), i1=Math.min(i0+1,N-1);
+    const frac=x-i0, s=frac*frac*(3-2*frac);
+    const a=cellValues[Math.max(0,i0)], b=cellValues[i1];
     return {
       weight: a.weight+(b.weight-a.weight)*s,
       R: Math.round(a.R+(b.R-a.R)*s),
@@ -385,72 +343,51 @@ function drawRow(words, N, yTop, cellW, rowH, rulerH, indexH, padL, totalW, emoK
     };
   }
 
-  // Draw continuous stripes — WIDTH scales with emotion intensity
-  // strong emotion → wide stripes packed tight (dramatic)
-  // weak/neutral   → thin stripes spread apart (calm)
+  // ── Continuous stripe — width = f(intensity) ──────────────────
   const STRIPE_W_MIN = 0.7;
   const STRIPE_W_MAX = 8.0;
-  const GAP_MIN      = 0.0;
-  const GAP_MAX      = 0.0;
   const totalBandW   = N * cellW;
 
   let sx = padL;
   while(sx < padL + totalBandW){
-    const cellX = Math.min((sx - padL) / cellW, N - 0.001);
+    const cellX = Math.min((sx-padL)/cellW, N-0.001);
     const cv    = sampleAt(cellX);
-    const { weight, R, G, B } = cv;
-
-    const sw    = STRIPE_W_MIN + (STRIPE_W_MAX - STRIPE_W_MIN) * weight;
-    const gap   = GAP_MAX - (GAP_MAX - GAP_MIN) * weight;
-    const pitch = sw + gap;
+    const {weight,R,G,B} = cv;
+    const sw    = STRIPE_W_MIN + (STRIPE_W_MAX-STRIPE_W_MIN)*weight;
 
     if(weight > 0.01){
       const blockH = Math.round(rowH * weight);
       const blockY = bandY + rowH - blockH;
-
-      // Flat full-opacity fill — crisp and vivid
       ctx.fillStyle = `rgb(${R},${G},${B})`;
       ctx.fillRect(sx, blockY, sw, blockH);
     }
-
-    sx += pitch;
+    sx += sw; // gap=0, packed tight
   }
 
-  // ── 3. Cell dividers on top of stripes (very faint) ──────────────
+  // ── Cell dividers (very faint) ────────────────────────────────
   ctx.strokeStyle = 'rgba(0,0,0,.07)';
   ctx.lineWidth   = 0.4;
   for(let i=1;i<N;i++){
-    const x = padL + i*cellW;
-    ctx.beginPath();
-    ctx.moveTo(x, bandY);
-    ctx.lineTo(x, bandY+rowH);
-    ctx.stroke();
+    const x=padL+i*cellW;
+    ctx.beginPath();ctx.moveTo(x,bandY);ctx.lineTo(x,bandY+rowH);ctx.stroke();
   }
-  // Band border
-  ctx.strokeStyle = 'rgba(0,0,0,.15)';
-  ctx.lineWidth   = 0.5;
+  ctx.strokeStyle='rgba(0,0,0,.15)';ctx.lineWidth=0.5;
   ctx.beginPath();ctx.moveTo(padL,bandY);ctx.lineTo(padL+N*cellW,bandY);ctx.stroke();
   ctx.beginPath();ctx.moveTo(padL,bandY+rowH);ctx.lineTo(padL+N*cellW,bandY+rowH);ctx.stroke();
 
-  // ── 5. Ruler — one tick per word ────────────────────────────
+  // ── Ruler — one tick per word ─────────────────────────────────
   const ry = bandY + rowH;
-
-  // Thin baseline
-  ctx.strokeStyle = 'rgba(0,0,0,.18)';
-  ctx.lineWidth   = 0.5;
+  ctx.strokeStyle='rgba(0,0,0,.18)';ctx.lineWidth=0.5;
   ctx.beginPath();ctx.moveTo(padL,ry);ctx.lineTo(padL+N*cellW,ry);ctx.stroke();
 
-  // One vertical tick per word boundary
   for(let i=0;i<=N;i++){
-    const x = padL + i*cellW;
-    const isMaj = i%5===0;
-    const tickH = isMaj ? rulerH : rulerH*0.5;
-    ctx.strokeStyle = isMaj ? 'rgba(0,0,0,.28)' : 'rgba(0,0,0,.14)';
-    ctx.lineWidth   = isMaj ? 0.6 : 0.4;
+    const x=padL+i*cellW;
+    const isMaj=i%5===0;
+    const tickH=isMaj ? rulerH : rulerH*0.5;
+    ctx.strokeStyle=isMaj?'rgba(0,0,0,.28)':'rgba(0,0,0,.14)';
+    ctx.lineWidth  =isMaj?0.6:0.4;
     ctx.beginPath();ctx.moveTo(x,ry);ctx.lineTo(x,ry+tickH);ctx.stroke();
   }
-
-  // Bottom border
   ctx.strokeStyle='rgba(0,0,0,.10)';ctx.lineWidth=0.4;
   ctx.beginPath();ctx.moveTo(padL,ry+rulerH);ctx.lineTo(padL+N*cellW,ry+rulerH);ctx.stroke();
 }
@@ -458,12 +395,6 @@ function drawRow(words, N, yTop, cellW, rowH, rulerH, indexH, padL, totalW, emoK
 // ── UTILS ─────────────────────────────────────────────────────────
 function hexToRGB(hex){
   return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];
-}
-function lighten(hex, amt){
-  const r=parseInt(hex.slice(1,3),16);
-  const g=parseInt(hex.slice(3,5),16);
-  const b=parseInt(hex.slice(5,7),16);
-  return `rgb(${Math.min(255,Math.round(r+(255-r)*amt))},${Math.min(255,Math.round(g+(255-g)*amt))},${Math.min(255,Math.round(b+(255-b)*amt))})`;
 }
 
 // ── EVENTS ────────────────────────────────────────────────────────
