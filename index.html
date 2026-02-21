@@ -43,7 +43,7 @@
     color:#000;opacity:.45;margin-bottom:10px;
   }
   textarea{
-    width:100%;height:100px;resize:none;padding:10px;
+    width:100%;height:140px;resize:none;padding:10px;
     font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;
     background:#f8f8f8;border:1px solid #000;outline:none;color:#000;border-radius:0;
   }
@@ -100,7 +100,9 @@
   <div class="panel">
     <div class="panel-section">
       <div class="plabel">Input Text</div>
-      <textarea id="inp">I love this app but it crashes now. Never again, I'm done.</textarea>
+      <textarea id="inp">I love this app but it crashes now. Never again, I'm done.
+This update is absolutely perfect, best version yet.
+Totally broken after the last patch, avoid at all costs.</textarea>
       <div class="brow">
         <button class="bprim" id="btnGen">Generate</button>
         <button class="bsec" id="btnRnd">↺</button>
@@ -218,31 +220,34 @@ let lastText = '';
 
 function draw(text){
   lastText = text;
-  const words = tokenize(text);
-  const N     = words.length;
-  if(!N) return;
 
-  const counts = {};
-  for(const e of EMOTIONS) counts[e.key]=0;
-  for(const w of words) if(w.emo) counts[w.emo]++;
+  // Split by newline, max 3 sentences, ignore empty lines
+  const sentences = text.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,3);
+  if(!sentences.length) return;
+
+  const allWords = sentences.map(s=>tokenize(s));
+  const maxN = Math.max(...allWords.map(w=>w.length));
+  if(!maxN) return;
 
   const DPR = window.devicePixelRatio||1;
 
-  const ROW_H   = 160;
-  const RULER_H = 18;
-  const INDEX_H = 20;
-  const GAP     = 18;
-  const PAD_L   = 8;
-  const PAD_T   = 10;
-  const PAD_B   = 12;
+  const ROW_H    = 140;
+  const RULER_H  = 14;
+  const INDEX_H  = 0;
+  const PAIR_GAP = 12;   // gap between pos/neg rows in a pair
+  const SEN_GAP  = 28;   // gap between sentence groups
+  const PAD_L    = 8;
+  const PAD_T    = 16;
+  const PAD_B    = 16;
 
   const stageEl = document.querySelector('.stage');
   const availW  = stageEl.clientWidth - PAD_L*2 - 48;
-  const CELL_W  = Math.max(12, Math.floor(availW / N));
+  const CELL_W  = Math.max(10, Math.floor(availW / maxN));
 
-  const ROWS   = 2;
-  const totalW = PAD_L*2 + N*CELL_W;
-  const totalH = PAD_T + ROWS*(INDEX_H+ROW_H+RULER_H) + (ROWS-1)*GAP + PAD_B;
+  const totalW = PAD_L*2 + maxN*CELL_W;
+  // each sentence = 2 rows (pos+neg) + ruler×2 + pair gap; between sentences = SEN_GAP
+  const pairH  = ROW_H*2 + RULER_H*2 + PAIR_GAP;
+  const totalH = PAD_T + sentences.length*pairH + (sentences.length-1)*SEN_GAP + PAD_B;
 
   canvas.width  = totalW * DPR;
   canvas.height = totalH * DPR;
@@ -253,15 +258,31 @@ function draw(text){
   ctx.fillStyle='#ffffff';
   ctx.fillRect(0,0,totalW,totalH);
 
-  const rowY = [
-    PAD_T,
-    PAD_T + INDEX_H + ROW_H + RULER_H + GAP,
-  ];
+  // Aggregate counts for sidebar
+  const counts = {};
+  for(const e of EMOTIONS) counts[e.key]=0;
+  for(const ws of allWords) for(const w of ws) if(w.emo) counts[w.emo]++;
 
-  drawRow(words, N, rowY[0], CELL_W, ROW_H, RULER_H, INDEX_H, PAD_L, totalW, ['p1','p2','p3']);
-  drawRow(words, N, rowY[1], CELL_W, ROW_H, RULER_H, INDEX_H, PAD_L, totalW, ['n1','n2','n3']);
+  sentences.forEach((sen, si)=>{
+    const words = allWords[si];
+    const N     = words.length;
+    const baseY = PAD_T + si*(pairH + SEN_GAP);
 
-  // Sidebar
+    // Sentence label
+    ctx.fillStyle='rgba(0,0,0,.22)';
+    ctx.font=`7px 'IBM Plex Mono', monospace`;
+    ctx.textAlign='left';
+    ctx.textBaseline='middle';
+    ctx.fillText(`${si+1}`, PAD_L, baseY - 7);
+
+    const posY = baseY;
+    const negY = baseY + ROW_H + RULER_H + PAIR_GAP;
+
+    drawRow(words, N, posY, CELL_W, ROW_H, RULER_H, 0, PAD_L, totalW, ['p1','p2','p3']);
+    drawRow(words, N, negY, CELL_W, ROW_H, RULER_H, 0, PAD_L, totalW, ['n1','n2','n3']);
+  });
+
+  // Sidebar — aggregate all sentences
   document.getElementById('legEl').innerHTML = EMOTIONS.map(e=>{
     const c=counts[e.key]||0;
     return `<div class="leg">
@@ -271,12 +292,14 @@ function draw(text){
     </div>`;
   }).join('');
 
-  document.getElementById('kwEl').innerHTML = words.filter(w=>w.emo).map(w=>
+  const allKw = allWords.flat().filter(w=>w.emo);
+  document.getElementById('kwEl').innerHTML = allKw.map(w=>
     `<span style="border-color:${EMO_MAP[w.emo].color}66;color:${EMO_MAP[w.emo].color}">${w.word}</span>`
   ).join('')||`<span style="opacity:.3">No keywords</span>`;
 
+  const totalWords = allWords.flat().length;
   document.getElementById('fInfo').textContent =
-    `${N} words · ${words.filter(w=>w.emo).length} keywords · ${Object.values(counts).filter(v=>v>0).length} emotion types`;
+    `${sentences.length} sentences · ${totalWords} words · ${allKw.length} keywords`;
 }
 
 // ── ROW RENDERER ──────────────────────────────────────────────────
