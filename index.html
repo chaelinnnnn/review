@@ -7,95 +7,58 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{
-    background:#fff;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:10px;color:#000;
-    display:flex;flex-direction:column;min-height:100vh;
-  }
-  .topbar{
-    display:flex;align-items:baseline;justify-content:space-between;
-    padding:14px 28px 10px;
-    border-bottom:1px solid #000;
-  }
-  .logo{ font-size:9px;letter-spacing:.22em;text-transform:uppercase; }
+  body{background:#fff;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#000;display:flex;flex-direction:column;min-height:100vh;}
+  .topbar{display:flex;align-items:baseline;justify-content:space-between;padding:14px 28px 10px;border-bottom:1px solid #000;}
+  .logo{font-size:9px;letter-spacing:.22em;text-transform:uppercase;}
   .right{display:flex;gap:0;}
-  .btn{
-    background:none;border:none;border-left:1px solid #000;
-    padding:0 16px;height:28px;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:9px;letter-spacing:.18em;text-transform:uppercase;
-    color:#000;cursor:pointer;
-  }
+  .btn{background:none;border:none;border-left:1px solid #000;padding:0 16px;height:28px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#000;cursor:pointer;}
   .btn:first-child{border-left:none;}
   .btn:hover{background:#000;color:#fff;}
   .layout{display:flex;flex:1;min-height:0;}
-  .panel{
-    width:240px;min-width:240px;
-    border-right:1px solid #000;
-    display:flex;flex-direction:column;
-    background:#fff;overflow-y:auto;
-  }
-  .panel-section{ padding:16px 20px; border-bottom:1px solid #000; }
+  .panel{width:240px;min-width:240px;border-right:1px solid #000;display:flex;flex-direction:column;background:#fff;overflow-y:auto;}
+  .panel-section{padding:16px 20px;border-bottom:1px solid #000;}
   .panel-section:last-child{border-bottom:none;}
-  .plabel{
-    font-size:8px;letter-spacing:.22em;text-transform:uppercase;
-    color:#000;opacity:.45;margin-bottom:10px;
-  }
-  textarea{
-    width:100%;height:140px;resize:none;padding:10px;
-    font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;
-    background:#f8f8f8;border:1px solid #000;outline:none;color:#000;border-radius:0;
-  }
+  .plabel{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:#000;opacity:.45;margin-bottom:10px;}
+  textarea{width:100%;height:140px;resize:none;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;background:#f8f8f8;border:1px solid #000;outline:none;color:#000;border-radius:0;}
   .brow{display:flex;margin-top:8px;border:1px solid #000;}
-  .bprim{
-    flex:2;background:#000;color:#fff;border:none;border-right:1px solid #fff;
-    padding:9px 0;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.18em;
-    text-transform:uppercase;cursor:pointer;
-  }
+  .bprim{flex:2;background:#000;color:#fff;border:none;border-right:1px solid #fff;padding:9px 0;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;}
   .bprim:hover{background:#333;}
-  .bsec{
-    flex:1;background:#fff;border:none;padding:9px 0;
-    font-family:'IBM Plex Mono',monospace;font-size:11px;
-    color:#000;cursor:pointer;text-align:center;
-  }
+  .bsec{flex:1;background:#fff;border:none;padding:9px 0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#000;cursor:pointer;text-align:center;}
   .bsec:hover{background:#f0f0f0;}
   .leg-list{display:flex;flex-direction:column;}
-  .leg{ display:flex;align-items:center;gap:0;border-bottom:1px solid rgba(0,0,0,.08); }
+  .leg{display:flex;align-items:center;gap:0;border-bottom:1px solid rgba(0,0,0,.08);}
   .leg:last-child{border:none;}
-  .leg-bar{ width:4px;height:100%;min-height:28px;flex-shrink:0;align-self:stretch; }
-  .leg-name{
-    flex:1;padding:7px 10px;font-size:8px;letter-spacing:.12em;text-transform:uppercase;
-    border-right:1px solid rgba(0,0,0,.08);color:#000;opacity:.5;
-  }
-  .leg-n{ padding:7px 10px;font-size:9px;opacity:.3;min-width:28px;text-align:right; }
+  .leg-bar{width:4px;height:100%;min-height:28px;flex-shrink:0;align-self:stretch;}
+  .leg-name{flex:1;padding:7px 10px;font-size:8px;letter-spacing:.12em;text-transform:uppercase;border-right:1px solid rgba(0,0,0,.08);color:#000;opacity:.5;}
+  .leg-n{padding:7px 10px;font-size:9px;opacity:.3;min-width:28px;text-align:right;}
   .leg-n.on{opacity:1;}
   .kw{display:flex;flex-wrap:wrap;gap:4px;max-height:80px;overflow-y:auto;}
-  .kw span{
-    padding:2px 6px;font-size:8px;letter-spacing:.08em;text-transform:uppercase;
-    border:1px solid rgba(0,0,0,.15);color:#000;
+  .kw span{padding:2px 6px;font-size:8px;letter-spacing:.08em;text-transform:uppercase;border:1px solid rgba(0,0,0,.15);color:#000;}
+  .stage{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:stretch;padding:28px 28px;background:#fff;gap:0;}
+  /* each sentence row */
+  .row-wrap{display:flex;align-items:flex-end;gap:8px;margin-bottom:20px;}
+  .row-wrap:last-child{margin-bottom:0;}
+  .row-canvas-wrap{flex:1;min-width:0;}
+  .row-canvas-wrap canvas{display:block;image-rendering:crisp-edges;}
+  /* save button */
+  .save-btn{
+    flex-shrink:0;width:24px;height:24px;
+    background:none;border:1px solid rgba(0,0,0,.25);
+    cursor:pointer;font-size:11px;
+    display:flex;align-items:center;justify-content:center;
+    color:#000;margin-bottom:18px;
   }
-  .stage{
-    flex:1;overflow:auto;display:flex;align-items:flex-start;
-    padding:32px 28px;background:#fff;
-  }
-  canvas{display:block;image-rendering:crisp-edges;}
-  .foot{
-    border-top:1px solid #000;padding:8px 28px;
-    font-size:8px;letter-spacing:.14em;text-transform:uppercase;
-    color:#000;opacity:.35;display:flex;justify-content:space-between;
-  }
+  .save-btn:hover{background:#000;color:#fff;border-color:#000;}
+  .foot{border-top:1px solid #000;padding:8px 28px;font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#000;opacity:.35;display:flex;justify-content:space-between;}
 </style>
 </head>
 <body>
-
 <div class="topbar">
   <div class="logo">■ Emotion Grid Visualizer</div>
   <div class="right">
-    <button class="btn" id="btnDl">Export PNG</button>
+    <button class="btn" id="btnDlAll">Export All</button>
   </div>
 </div>
-
 <div class="layout">
   <div class="panel">
     <div class="panel-section">
@@ -115,9 +78,8 @@
       <div class="kw" id="kwEl"></div>
     </div>
   </div>
-  <div class="stage"><canvas id="c"></canvas></div>
+  <div class="stage" id="stage"></div>
 </div>
-
 <div class="foot">
   <span>Each cell = one word · color = emotion type · height = intensity</span>
   <span id="fInfo">—</span>
@@ -127,7 +89,6 @@
 (() => {
 'use strict';
 
-// ── EMOTION CONFIG — 6 categories, P1-P3 / N1-N3 ──────────────────
 const EMOTIONS = [
   { key:'p1', label:'P1 · Mild Positive',    color:'#E9FF8D', weight:0.28 },
   { key:'p2', label:'P2 · Strong Positive',  color:'#FFEC8F', weight:0.52 },
@@ -138,297 +99,198 @@ const EMOTIONS = [
 ];
 const EMO_MAP = Object.fromEntries(EMOTIONS.map(e=>[e.key,e]));
 
-// ── KEYWORD SETS — build weak→strong so stronger category overwrites ─
 const WORD_MAP = new Map();
 const SETS = {
-  p1: [
-    'good','nice','okay','fine','decent','not bad','pretty good',
-    'works','working','useful','helpful','simple','easy','clean',
-    'smooth','clear','solid','reliable','convenient','comfortable',
-    'fair','reasonable','acceptable','satisfied','happy',
-  ],
-  p2: [
-    'great','very good','really good','awesome','amazing','excellent',
-    'fantastic','wonderful','impressive','love it','so good',
-    'highly recommend','recommend','well done','brilliant','superb',
-    'incredible','outstanding','perfect','exactly what i needed',
-    // from Emotional Attachment (moderate)
-    'love','loved','loving','favorite','favourite','my go-to',
-    'trust it','feels right','feels good','big fan','personal favorite',
-  ],
-  p3: [
-    'best','the best','best ever','absolutely perfect','life-changing',
-    'mind-blowing','flawless','10/10','five stars','must have',
-    'unbelievable','insane','legendary','iconic','no complaints',
-    "can't complain",'beyond amazing','literally perfect','nothing better','ultimate',
-    // from Emotional Attachment (high intensity)
-    'obsessed','addicted',"can't live without",'always use','use it every day',
-    'so attached','loyal','means a lot','special','dear','my app',
-  ],
-  n1: [
-    'slow','a bit slow','laggy','slightly buggy','sometimes crashes',
-    'confusing','unclear','not great','could be better','needs improvement',
-    'annoying','a little annoying','inconvenient','not ideal','meh',
-    'okay but','not impressed','limited','minor issue','small problem',
-    'takes time','too many ads',
-  ],
-  n2: [
-    'bad','very bad','terrible','poor','disappointing','frustrating',
-    'useless','waste of time','waste of money','broken',"doesn't work",
-    'hard to use','hate it','not worth it','awful','ridiculous',
-    'unacceptable','problematic','glitchy','buggy','crashes constantly',
-    'freezes','garbage','low quality',
-  ],
-  n3: [
-    'worst','worst ever','never again','delete','uninstall',"i'm done",
-    'done with this','scam','fraud','trash','junk','hate this app',
-    'completely useless','totally broken','disaster','ruined',
-    'avoid',"don't download",'0 stars','horrible','unforgivable',
-    'terrible experience','regret downloading',
-  ],
+  p1: ['good','nice','okay','fine','decent','not bad','pretty good','works','working','useful','helpful','simple','easy','clean','smooth','clear','solid','reliable','convenient','comfortable','fair','reasonable','acceptable','satisfied','happy'],
+  p2: ['great','very good','really good','awesome','amazing','excellent','fantastic','wonderful','impressive','love it','so good','highly recommend','recommend','well done','brilliant','superb','incredible','outstanding','perfect','exactly what i needed','love','loved','loving','favorite','favourite','my go-to','trust it','feels right','feels good','big fan','personal favorite'],
+  p3: ['best','the best','best ever','absolutely perfect','life-changing','mind-blowing','flawless','10/10','five stars','must have','unbelievable','insane','legendary','iconic','no complaints',"can't complain",'beyond amazing','literally perfect','nothing better','ultimate','obsessed','addicted',"can't live without",'always use','use it every day','so attached','loyal','means a lot','special','dear','my app'],
+  n1: ['slow','a bit slow','laggy','slightly buggy','sometimes crashes','confusing','unclear','not great','could be better','needs improvement','annoying','a little annoying','inconvenient','not ideal','meh','okay but','not impressed','limited','minor issue','small problem','takes time','too many ads'],
+  n2: ['bad','very bad','terrible','poor','disappointing','frustrating','useless','waste of time','waste of money','broken',"doesn't work",'hard to use','hate it','not worth it','awful','ridiculous','unacceptable','problematic','glitchy','buggy','crashes constantly','freezes','garbage','low quality'],
+  n3: ['worst','worst ever','never again','delete','uninstall',"i'm done",'done with this','scam','fraud','trash','junk','hate this app','completely useless','totally broken','disaster','ruined','avoid',"don't download",'0 stars','horrible','unforgivable','terrible experience','regret downloading'],
 };
-// weak→strong order so stronger entry overwrites duplicate keys
-for(const [emo,words] of Object.entries(SETS)){
-  for(const w of words) WORD_MAP.set(w, emo);
-}
+for(const [emo,words] of Object.entries(SETS)) for(const w of words) WORD_MAP.set(w,emo);
 
-// ── TOKENIZE ──────────────────────────────────────────────────────
 function tokenize(text){
-  const words = text.toLowerCase()
-    .split(/\s+/)
-    .map(t=>t.replace(/[^\w']/g,''))
-    .filter(Boolean);
-  const result = [];
+  const words = text.toLowerCase().split(/\s+/).map(t=>t.replace(/[^\w']/g,'')).filter(Boolean);
+  const result=[];
   for(let i=0;i<words.length;i++){
-    const bi = words[i]+' '+(words[i+1]||'');
-    if(WORD_MAP.has(bi)){
-      result.push({word:bi, emo:WORD_MAP.get(bi)});
-      i++;
-    } else {
-      result.push({word:words[i], emo:WORD_MAP.has(words[i])?WORD_MAP.get(words[i]):null});
-    }
+    const bi=words[i]+' '+(words[i+1]||'');
+    if(WORD_MAP.has(bi)){ result.push({word:bi,emo:WORD_MAP.get(bi)}); i++; }
+    else result.push({word:words[i],emo:WORD_MAP.has(words[i])?WORD_MAP.get(words[i]):null});
   }
   return result;
 }
 
-// ── DRAW ──────────────────────────────────────────────────────────
-const canvas = document.getElementById('c');
-const ctx    = canvas.getContext('2d');
-let lastText = '';
+function hexToRGB(hex){
+  return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];
+}
+
+let rowCanvases=[], lastText='';
+const stageEl=document.getElementById('stage');
 
 function draw(text){
-  lastText = text;
-
-  // Split by newline, max 3 sentences, ignore empty lines
-  const sentences = text.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,3);
+  lastText=text;
+  const sentences=text.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,3);
+  stageEl.innerHTML=''; rowCanvases=[];
   if(!sentences.length) return;
 
-  const allWords = sentences.map(s=>tokenize(s));
-  const maxN = Math.max(...allWords.map(w=>w.length));
+  const allWords=sentences.map(s=>tokenize(s));
+  const maxN=Math.max(...allWords.map(w=>w.length));
   if(!maxN) return;
 
-  const DPR     = window.devicePixelRatio||1;
-  const ROW_H   = 160;
-  const RULER_H = 16;
-  const SEN_GAP = 24;  // gap between sentence rows
-  const PAD_L   = 8;
-  const PAD_T   = 16;
-  const PAD_B   = 16;
+  const DPR=window.devicePixelRatio||1;
+  const ROW_H=160, RULER_H=16, PAD_L=8, PAD_T=8, PAD_B=8;
 
-  const stageEl = document.querySelector('.stage');
-  const availW  = stageEl.clientWidth - PAD_L*2 - 48;
-  const CELL_W  = Math.max(10, Math.floor(availW / maxN));
-
+  // Available width: stage width minus padding and save-btn
+  const availW = stageEl.clientWidth - 56 - 32;
+  const CELL_W = Math.max(10, Math.floor(availW / maxN));
   const totalW = PAD_L*2 + maxN*CELL_W;
-  // one row per sentence
-  const rowH_total = ROW_H + RULER_H;
-  const totalH = PAD_T + sentences.length*rowH_total + (sentences.length-1)*SEN_GAP + PAD_B;
+  const totalH = PAD_T + ROW_H + RULER_H + PAD_B;
 
-  canvas.width  = totalW * DPR;
-  canvas.height = totalH * DPR;
-  canvas.style.width  = totalW+'px';
-  canvas.style.height = totalH+'px';
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-
-  ctx.fillStyle='#ffffff';
-  ctx.fillRect(0,0,totalW,totalH);
-
-  // Aggregate counts for sidebar
-  const counts = {};
+  const counts={};
   for(const e of EMOTIONS) counts[e.key]=0;
   for(const ws of allWords) for(const w of ws) if(w.emo) counts[w.emo]++;
 
-  sentences.forEach((sen, si)=>{
-    const words = allWords[si];
-    const N     = words.length;
-    const rowY  = PAD_T + si*(rowH_total + SEN_GAP);
+  sentences.forEach((sen,si)=>{
+    const words=allWords[si], N=words.length;
 
-    // Sentence index label
-    ctx.fillStyle='rgba(0,0,0,.22)';
-    ctx.font=`7px 'IBM Plex Mono', monospace`;
-    ctx.textAlign='left';
-    ctx.textBaseline='middle';
-    ctx.fillText(`${si+1}`, PAD_L, rowY - 7);
+    const canvas=document.createElement('canvas');
+    canvas.width=totalW*DPR; canvas.height=totalH*DPR;
+    canvas.style.width=totalW+'px'; canvas.style.height=totalH+'px';
+    const ctx=canvas.getContext('2d');
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,totalW,totalH);
 
-    // ONE row per sentence — all 6 emotions mixed
-    drawRow(words, N, rowY, CELL_W, ROW_H, RULER_H, 0, PAD_L, totalW,
-      ['p1','p2','p3','n1','n2','n3']);
+    drawRow(ctx,words,N,PAD_T,CELL_W,ROW_H,RULER_H,0,PAD_L,totalW);
+    rowCanvases.push(canvas);
+
+    // Wrap
+    const wrap=document.createElement('div');
+    wrap.className='row-wrap';
+
+    const cWrap=document.createElement('div');
+    cWrap.className='row-canvas-wrap';
+    cWrap.appendChild(canvas);
+
+    const saveBtn=document.createElement('button');
+    saveBtn.className='save-btn';
+    saveBtn.innerHTML='↓';
+    saveBtn.title=`Save row ${si+1} as PNG`;
+    saveBtn.addEventListener('click',()=>{
+      const a=document.createElement('a');
+      a.href=canvas.toDataURL('image/png');
+      a.download=`emotion-${si+1}.png`;
+      a.click();
+    });
+
+    wrap.appendChild(cWrap);
+    wrap.appendChild(saveBtn);
+    stageEl.appendChild(wrap);
   });
 
-  // Sidebar
-  document.getElementById('legEl').innerHTML = EMOTIONS.map(e=>{
+  document.getElementById('legEl').innerHTML=EMOTIONS.map(e=>{
     const c=counts[e.key]||0;
-    return `<div class="leg">
-      <div class="leg-bar" style="background:${e.color}"></div>
-      <span class="leg-name">${e.label}</span>
-      <span class="leg-n ${c>0?'on':''}">${c||'·'}</span>
-    </div>`;
+    return `<div class="leg"><div class="leg-bar" style="background:${e.color}"></div><span class="leg-name">${e.label}</span><span class="leg-n ${c>0?'on':''}">${c||'·'}</span></div>`;
   }).join('');
 
-  const allKw = allWords.flat().filter(w=>w.emo);
-  document.getElementById('kwEl').innerHTML = allKw.map(w=>
+  const allKw=allWords.flat().filter(w=>w.emo);
+  document.getElementById('kwEl').innerHTML=allKw.map(w=>
     `<span style="border-color:${EMO_MAP[w.emo].color}66;color:${EMO_MAP[w.emo].color}">${w.word}</span>`
   ).join('')||`<span style="opacity:.3">No keywords</span>`;
 
-  const totalWords = allWords.flat().length;
-  document.getElementById('fInfo').textContent =
-    `${sentences.length} sentences · ${totalWords} words · ${allKw.length} keywords`;
+  document.getElementById('fInfo').textContent=
+    `${sentences.length} sentences · ${allWords.flat().length} words · ${allKw.length} keywords`;
 }
 
-// ── ROW RENDERER ──────────────────────────────────────────────────
-function drawRow(words, N, yTop, cellW, rowH, rulerH, indexH, padL, totalW, emoKeys){
-  const bandY = yTop + indexH;
+function drawRow(ctx,words,N,yTop,cellW,rowH,rulerH,indexH,padL,totalW){
+  const bandY=yTop+indexH;
+  const emoKeys=['p1','p2','p3','n1','n2','n3'];
 
-  // ── Anchor + interpolation ────────────────────────────────────
-  const anchors = new Array(N).fill(null);
+  const anchors=new Array(N).fill(null);
   for(let i=0;i<N;i++){
-    const w = words[i];
+    const w=words[i];
     if(w.emo && emoKeys.includes(w.emo)){
-      const emo = EMO_MAP[w.emo];
-      const [R,G,B] = hexToRGB(emo.color);
-      anchors[i] = { weight: emo.weight, R, G, B };
+      const emo=EMO_MAP[w.emo];
+      const [R,G,B]=hexToRGB(emo.color);
+      anchors[i]={weight:emo.weight,R,G,B};
     }
   }
 
-  const hasAnyAnchor = anchors.some(a=>a!==null);
-  const cellValues   = new Array(N);
+  const hasAnyAnchor=anchors.some(a=>a!==null);
+  const cellValues=new Array(N);
 
-  // Average weight across all emotions for neutral/unrecognized sentences
-  const AVG_WEIGHT = 0.35;
   if(!hasAnyAnchor){
-    for(let i=0;i<N;i++) cellValues[i]={ weight:AVG_WEIGHT, R:180, G:180, B:180 };
+    for(let i=0;i<N;i++) cellValues[i]={weight:0.35,R:180,G:180,B:180};
   } else {
     for(let i=0;i<N;i++){
-      if(anchors[i]){ cellValues[i]=anchors[i]; continue; }
-      let prevIdx=-1, nextIdx=-1;
-      for(let k=i-1;k>=0;k--){ if(anchors[k]){prevIdx=k;break;} }
-      for(let k=i+1;k<N;k++){ if(anchors[k]){nextIdx=k;break;} }
-
-      if(prevIdx===-1&&nextIdx===-1){
-        cellValues[i]={weight:0.0,R:200,G:200,B:200};
-      } else if(prevIdx===-1){
-        const a=anchors[nextIdx], dist=nextIdx-i;
-        const f=Math.max(0.0, 1-dist*0.14);
-        cellValues[i]={weight:a.weight*f,R:a.R,G:a.G,B:a.B};
-      } else if(nextIdx===-1){
-        const a=anchors[prevIdx], dist=i-prevIdx;
-        const f=Math.max(0.0, 1-dist*0.14);
-        cellValues[i]={weight:a.weight*f,R:a.R,G:a.G,B:a.B};
-      } else {
-        const prev=anchors[prevIdx], next=anchors[nextIdx];
-        const span=nextIdx-prevIdx;
-        const t=(i-prevIdx)/span;
-        const s=t*t*(3-2*t);
-        cellValues[i]={
-          weight: prev.weight+(next.weight-prev.weight)*s,
-          R: Math.round(prev.R+(next.R-prev.R)*s),
-          G: Math.round(prev.G+(next.G-prev.G)*s),
-          B: Math.round(prev.B+(next.B-prev.B)*s),
-        };
+      if(anchors[i]){cellValues[i]=anchors[i];continue;}
+      let prevIdx=-1,nextIdx=-1;
+      for(let k=i-1;k>=0;k--){if(anchors[k]){prevIdx=k;break;}}
+      for(let k=i+1;k<N;k++){if(anchors[k]){nextIdx=k;break;}}
+      if(prevIdx===-1&&nextIdx===-1){ cellValues[i]={weight:0.0,R:200,G:200,B:200}; }
+      else if(prevIdx===-1){ const a=anchors[nextIdx],dist=nextIdx-i,f=Math.max(0,1-dist*0.14); cellValues[i]={weight:a.weight*f,R:a.R,G:a.G,B:a.B}; }
+      else if(nextIdx===-1){ const a=anchors[prevIdx],dist=i-prevIdx,f=Math.max(0,1-dist*0.14); cellValues[i]={weight:a.weight*f,R:a.R,G:a.G,B:a.B}; }
+      else {
+        const prev=anchors[prevIdx],next=anchors[nextIdx],span=nextIdx-prevIdx;
+        const t=(i-prevIdx)/span,s=t*t*(3-2*t);
+        cellValues[i]={weight:prev.weight+(next.weight-prev.weight)*s,R:Math.round(prev.R+(next.R-prev.R)*s),G:Math.round(prev.G+(next.G-prev.G)*s),B:Math.round(prev.B+(next.B-prev.B)*s)};
       }
     }
   }
 
   function sampleAt(x){
-    const i0=Math.floor(x), i1=Math.min(i0+1,N-1);
-    const frac=x-i0, s=frac*frac*(3-2*frac);
-    const a=cellValues[Math.max(0,i0)], b=cellValues[i1];
-    return {
-      weight: a.weight+(b.weight-a.weight)*s,
-      R: Math.round(a.R+(b.R-a.R)*s),
-      G: Math.round(a.G+(b.G-a.G)*s),
-      B: Math.round(a.B+(b.B-a.B)*s),
-    };
+    const i0=Math.floor(x),i1=Math.min(i0+1,N-1),frac=x-i0,s=frac*frac*(3-2*frac);
+    const a=cellValues[Math.max(0,i0)],b=cellValues[i1];
+    return {weight:a.weight+(b.weight-a.weight)*s,R:Math.round(a.R+(b.R-a.R)*s),G:Math.round(a.G+(b.G-a.G)*s),B:Math.round(a.B+(b.B-a.B)*s)};
   }
 
-  // ── Continuous stripe — width = f(intensity) ──────────────────
-  const STRIPE_W_MIN = 0.7;
-  const STRIPE_W_MAX = 8.0;
-  const totalBandW   = N * cellW;
-
-  let sx = padL;
-  while(sx < padL + totalBandW){
-    const cellX = Math.min((sx-padL)/cellW, N-0.001);
-    const cv    = sampleAt(cellX);
-    const {weight,R,G,B} = cv;
-    const sw    = STRIPE_W_MIN + (STRIPE_W_MAX-STRIPE_W_MIN)*weight;
-
-    if(weight > 0.01){
-      const blockH = Math.round(rowH * weight);
-      const blockY = bandY + rowH - blockH;
-      ctx.fillStyle = `rgb(${R},${G},${B})`;
-      ctx.fillRect(sx, blockY, sw, blockH);
+  const STRIPE_W_MIN=0.7,STRIPE_W_MAX=8.0,totalBandW=N*cellW;
+  let sx=padL;
+  while(sx<padL+totalBandW){
+    const cellX=Math.min((sx-padL)/cellW,N-0.001),cv=sampleAt(cellX);
+    const {weight,R,G,B}=cv,sw=STRIPE_W_MIN+(STRIPE_W_MAX-STRIPE_W_MIN)*weight;
+    if(weight>0.01){
+      const blockH=Math.round(rowH*weight),blockY=bandY+rowH-blockH;
+      ctx.fillStyle=`rgb(${R},${G},${B})`;ctx.fillRect(sx,blockY,sw,blockH);
     }
-    sx += sw; // gap=0, packed tight
+    sx+=sw;
   }
 
-  // ── Cell dividers (very faint) ────────────────────────────────
-  ctx.strokeStyle = 'rgba(0,0,0,.07)';
-  ctx.lineWidth   = 0.4;
-  for(let i=1;i<N;i++){
-    const x=padL+i*cellW;
-    ctx.beginPath();ctx.moveTo(x,bandY);ctx.lineTo(x,bandY+rowH);ctx.stroke();
-  }
+  ctx.strokeStyle='rgba(0,0,0,.07)';ctx.lineWidth=0.4;
+  for(let i=1;i<N;i++){const x=padL+i*cellW;ctx.beginPath();ctx.moveTo(x,bandY);ctx.lineTo(x,bandY+rowH);ctx.stroke();}
   ctx.strokeStyle='rgba(0,0,0,.15)';ctx.lineWidth=0.5;
   ctx.beginPath();ctx.moveTo(padL,bandY);ctx.lineTo(padL+N*cellW,bandY);ctx.stroke();
   ctx.beginPath();ctx.moveTo(padL,bandY+rowH);ctx.lineTo(padL+N*cellW,bandY+rowH);ctx.stroke();
 
-  // ── Ruler — one tick per word ─────────────────────────────────
-  const ry = bandY + rowH;
+  const ry=bandY+rowH;
   ctx.strokeStyle='rgba(0,0,0,.18)';ctx.lineWidth=0.5;
   ctx.beginPath();ctx.moveTo(padL,ry);ctx.lineTo(padL+N*cellW,ry);ctx.stroke();
-
   for(let i=0;i<=N;i++){
-    const x=padL+i*cellW;
-    const isMaj=i%5===0;
-    const tickH=isMaj ? rulerH : rulerH*0.5;
-    ctx.strokeStyle=isMaj?'rgba(0,0,0,.28)':'rgba(0,0,0,.14)';
-    ctx.lineWidth  =isMaj?0.6:0.4;
+    const x=padL+i*cellW,isMaj=i%5===0,tickH=isMaj?rulerH:rulerH*0.5;
+    ctx.strokeStyle=isMaj?'rgba(0,0,0,.28)':'rgba(0,0,0,.14)';ctx.lineWidth=isMaj?0.6:0.4;
     ctx.beginPath();ctx.moveTo(x,ry);ctx.lineTo(x,ry+tickH);ctx.stroke();
   }
   ctx.strokeStyle='rgba(0,0,0,.10)';ctx.lineWidth=0.4;
   ctx.beginPath();ctx.moveTo(padL,ry+rulerH);ctx.lineTo(padL+N*cellW,ry+rulerH);ctx.stroke();
 }
 
-// ── UTILS ─────────────────────────────────────────────────────────
-function hexToRGB(hex){
-  return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];
-}
-
-// ── EVENTS ────────────────────────────────────────────────────────
-const inp = document.getElementById('inp');
+const inp=document.getElementById('inp');
 document.getElementById('btnGen').addEventListener('click',()=>draw(inp.value));
 document.getElementById('btnRnd').addEventListener('click',()=>draw(inp.value));
-document.getElementById('btnDl').addEventListener('click',()=>{
-  const a=document.createElement('a');
-  a.href=canvas.toDataURL('image/png');
-  a.download='emotion-grid.png';a.click();
+document.getElementById('btnDlAll').addEventListener('click',()=>{
+  rowCanvases.forEach((canvas,i)=>{
+    setTimeout(()=>{
+      const a=document.createElement('a');
+      a.href=canvas.toDataURL('image/png');
+      a.download=`emotion-${i+1}.png`;
+      a.click();
+    },i*300);
+  });
 });
 
 let db;
 inp.addEventListener('input',()=>{clearTimeout(db);db=setTimeout(()=>draw(inp.value),280);});
 window.addEventListener('resize',()=>draw(lastText||inp.value));
-
 if(inp.value.trim()) draw(inp.value);
 })();
 </script>
